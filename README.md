@@ -1,6 +1,6 @@
 # ma_crossover
 
-A simple repository of codes to tune a moving average crossover technique for stock-market trading (no $1,000,000 grounbreaking methods :().
+A simple repository of codes to tune a moving average crossover technique for stock-market trading (no $1,000,000 groundbreaking methods sadly!).
 
 For now, this is all WIP!
 
