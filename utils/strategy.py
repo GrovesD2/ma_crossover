@@ -95,7 +95,6 @@ def run_strategy(df: pandasDF,
         The key metrics to judge the strategy by 
 
     '''
-    
     # Perform the buying and selling
     percs, bought, sold = make_trades(df['Open'].values,
                                       df['Low'].values,

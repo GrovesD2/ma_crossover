@@ -19,7 +19,6 @@ def check_run(download_type: str):
     None
 
     '''
-    
     # First check if the data folder exists, if it doesn't, then create one
     if not os.path.isdir('data/'):
         os.mkdir('data')
