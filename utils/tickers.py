@@ -2,8 +2,21 @@
 Functionality to get ticker names and data
 '''
 import os
+import random
 import pandas as pd
 import yfinance as yf
+
+def get_random_tickers(n: int) -> list:
+    '''
+    From the available ticker data, randomly select n tickers.
+    '''
+    return random.sample(get_all_ticker_names(), n)
+
+def get_all_ticker_names():
+    '''
+    Get a list of all ticker names in the data-directory.
+    '''
+    return [s.split('.')[0] for s in os.listdir('data/') if '.csv' in s]
 
 def check_run(download_type: str):
     '''
