@@ -99,11 +99,10 @@ df_filt, bought, sold = dash.get_plotting_info(df,
 
 # Obtain the candlestick plot
 fig2 = dash.get_candlestick_plot(df_filt,
-                                 ticker,
                                  bought,
                                  sold)
 st.plotly_chart(fig2, use_container_width=True)
 
-st.subheader('Each Trade')
+st.subheader('Each Trade Made')
 st.write(df_summary)
 

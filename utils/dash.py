@@ -58,6 +58,32 @@ def get_sold_price(df: pandasDF,
 def get_plotting_info(df: pandasDF,
                       df_summary: pandasDF,
                       plot_idx: int) -> Tuple[pandasDF, dict, dict]:
+    '''
+    
+
+    Parameters
+    ----------
+    df : pandasDF
+        The price data
+    df_summary : pandasDF
+        The summary of trades made for this strategy
+    plot_idx : int
+        The index of the trade we wish to plot
+
+    Returns
+    -------
+    df : pandasDF
+        A dataframe of prices filtered to a pm 2 month window of buying
+    bought : dict
+        Information on when the stock was bought, and at what price.
+    sold : dict
+        Information on when the stock was sold, and at what price.
+        
+    Notes
+    -----
+    The bought/sold date/price needs to be in a list/array. Plotly does not 
+    deal with single float values.
+    '''
     
     # Get the bought date 
     df_summary = df_summary.loc[[plot_idx]]
@@ -81,9 +107,27 @@ def get_plotting_info(df: pandasDF,
     return df, bought, sold
 
 def get_candlestick_plot(df: pandasDF,
-                         ticker: str,
                          bought: dict,
                          sold: dict):
+    '''
+    This func provides the candlestick chart for a single trade to display on
+    the dashboard.
+
+    Parameters
+    ----------
+    df : pandasDF
+        A filtered dataframe, displaying the price info pm 2 months from the
+        bought point
+    bought : dict
+        Information on when the stock was bought, and at what price.
+    sold : dict
+        Information on when the stock was sold, and at what price.
+
+    Returns
+    -------
+    fig : plotly figure
+        The candlestick chart to be included on the dashboard
+    '''
 
     fig = make_subplots(rows = 2,
                         cols = 1,
