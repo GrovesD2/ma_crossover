@@ -110,8 +110,7 @@ def run_strategy(df: pandasDF,
     
     # Get the summaries and return the results
     df_summary = summarise_buy_sell(df, percs, bought, sold, hold)
-    stats = get_strat_stats(np.array(percs),
-                            hold)
+    stats = get_strat_stats(np.array(percs), hold)
     
     return df_summary, stats
 
@@ -171,10 +170,14 @@ def make_trades(Open: np_arr,
             # This sets the crossover, the fast must cross the slow from
             # underneath it
             if fast_ma[n-2] < slow_ma[n-2] and fast_ma[n-1] > slow_ma[n-1]:
-                price = Open[n]
-                bought.append(n)
-                holding = True
-                continue
+                
+                # Sometimes zero-price data exists. To avoid any divisions by
+                # zero when calculating percentages, these are not included.
+                if Open[n] > 0:
+                    price = Open[n]
+                    bought.append(n)
+                    holding = True
+                    continue
             
         if holding:
             # If we are holding the stock, check to see if the profit target

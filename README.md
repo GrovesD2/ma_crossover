@@ -22,7 +22,7 @@ I run the dashboard from the anaconda prompt (cd'd into the directory of the rep
 **TO DO**
 
 ## Using the neural network
-**TO DO**
+**IN PROGRESS**
 
 ## Some notes
 1. The buying/selling algorithm has been compiled with `numba`. There is likely an efficient pandas approach to doing this, however, once the numba code has been compiled it is remarkably efficient.
