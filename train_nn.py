@@ -15,7 +15,7 @@ if __name__ == "__main__":
                  'classes': 3, 
                  'nodes': 64, # Number of nodes in layer 1
                  'dropout perc': 0.2, # Dropout percentage of any dropout layers
-                 'epochs': 10, 
+                 'epochs': 15, 
                  'batch size': 8, 
                  'learn rate': 1e-4,
                  'decay rate': 1e-5,
