@@ -19,12 +19,16 @@ Simply put, if a faster moving average crosses a slower one from underneath, tha
     - Download all tickers in the "tickers.csv" file. More can be added to this file, however three are included as standard. **Please make sure there is a single column with the header `ticker` in this csv file.**
 
 ## The dashboard
-The dashboard can be from the anaconda prompt (cd'd into the directory of the repo) using the command `streamlit run strategy_dash.py`. The dashboard requries the ticker data to be available for the ticker selected. Controllable parameters are on the left-hand-side of the dashboard, outputs from the strategy and a candlestick chart for each trade is given on the right-hand-side
+The dashboard can be from the anaconda prompt (cd'd into the directory of the repo) using the command `streamlit run strategy_dash.py`. The dashboard requries the ticker data to be available for the ticker selected. Controllable parameters are on the left-hand-side of the dashboard, outputs from the strategy and a candlestick chart for each trade is given on the right-hand-side. Here is how the dash should look once rendered:
+
+![dashboard](images/dash.png)
 
 ## The neural network
-The principle idea behind the nn approach is to learn the trading set-ups where the moving average crossover strategy will work. So rather than predicting raw price increases, the aim is to use a NN to notice patterns where a trading strategy works. **Currently, this is not proving a viable route**, better feature engineering may be required, or, the problem may not be tractable at all!
+The principle idea behind the nn approach is to learn the trading set-ups where the moving average crossover strategy will work. So rather than predicting raw price increases, the aim is to use a NN to notice patterns where a trading strategy works. **Currently, this is not proving a viable route**, better feature engineering may be required, or, the problem may not be tractable at all! Here is the confusion matrix for a bidirectional LSTM network run for 15 epochs.
 
-If someone smarter than me (not hard) improves this code, please let me know!
+![dashboard](images/confusion.png)
+
+It's learned **something**, but clearly this isn't much better than randomly guessing... If someone smarter than me (not hard) improves this code, please let me know!
 
 ### To use
 1. Configure and run `get_nn_input.py`, which generates a .csv file containing the input training data to the nn.
