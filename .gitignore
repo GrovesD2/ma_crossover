@@ -1,3 +1,5 @@
 data/
 nn/data/
 nn/models/
+nn/__pycache__/
+utils/__pycache__/

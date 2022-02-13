@@ -2,11 +2,12 @@ import numpy as np
 import pandas as pd
 
 from numpy import array as np_arr
+from pandas import DataFrame as pandasDF
 
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.utils import to_categorical
-from tensorflow.keras.layers import Dense, LSTM, Dropout
+from tensorflow.keras.layers import Dense, LSTM, Bidirectional, Dropout
 
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 
@@ -65,6 +66,50 @@ def main(nn_config: dict):
     
     return
 
+def equalise_classes(df: pandasDF) -> pandasDF:
+    '''
+    To prevent there being a large discrepency in the number of each class,
+    print the number of each examples in each class, and ask whether the number
+    of classes should be equalised before feeding into the nn (this reduces
+    the number of training points)
+
+    Parameters
+    ----------
+    df : pandasDF
+        The pre-processed data to go into the nn.
+
+    Returns
+    -------
+    df : pandasDF
+        A dataframe which has potentially been class-equalised
+    '''
+    
+    # Find how many there are of each class
+    num_each_class = df['labels'].value_counts().values
+    
+    # Print the summary
+    print('Number of examples for each class: ')
+    print('Class 0: ', num_each_class[0])
+    print('Class 1: ', num_each_class[1])
+    print('Class 2: ', num_each_class[2])
+    print('\nDo you wish to equalise the classes? (y/n)')
+    
+    opt = input()
+    
+    # If the equal classes are wanted, randomly select n examples from each class
+    if opt == 'y':
+        classes = df['labels'].unique()
+        min_class_example = np.min(num_each_class)
+        
+        # For each class, take a random sample of examples s.t. all classes
+        # have the same number of elements
+        dfs = [df[df['labels'] == c].sample(min_class_example) 
+               for c in classes]
+        return pd.concat(dfs)
+
+    else:
+        return df
+    
 def get_nn_data(nn_config: dict) -> dict:
     '''
     From the data-file, get the train/test data for the nn.
@@ -86,6 +131,9 @@ def get_nn_data(nn_config: dict) -> dict:
     # Load in the data and drop columns not required for the nn
     df = pd.read_csv('nn/data/' + nn_config['data name'] + '.csv')
     df = df.drop(columns = ['ticker']).dropna()
+    
+    # Check if equal examples of each class is wanted
+    df = equalise_classes(df)
 
     # Shuffle the data
     data = df.values
@@ -105,7 +153,7 @@ def get_nn_data(nn_config: dict) -> dict:
                                        nn_config['classes'])
     
     # A 3D array is required for the lstm input, so we reshape to accomodate
-    if nn_config['model type'] == 'lstm':
+    if nn_config['model type'] in ['lstm', 'bidirectional']:
         nn_data['x train'] = reshape_rnn(nn_data['x train'],
                                          max(nn_config['time lags']),
                                          )
@@ -185,6 +233,19 @@ def get_model(nn_config: dict,
                  return_sequences = True),
             Dropout(nn_config['dropout perc']),
             LSTM(nn_config['nodes']//2),
+            Dropout(nn_config['dropout perc']),
+            Dense(nn_config['classes'], activation = 'softmax'),
+            ])
+        
+    elif nn_config['model type'] == 'bidirectional':
+        model = Sequential([
+            Bidirectional(LSTM(nn_config['nodes'],
+                               input_shape = (nn_data['x train'].shape[1],
+                                              nn_data['x train'].shape[2]),
+                               return_sequences = True),
+                          ),
+            Dropout(nn_config['dropout perc']),
+            Bidirectional(LSTM(nn_config['nodes']//2)),
             Dropout(nn_config['dropout perc']),
             Dense(nn_config['classes'], activation = 'softmax'),
             ])

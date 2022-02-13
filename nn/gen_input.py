@@ -93,10 +93,11 @@ def get_lagged_col_names(df: pandasDF,
 def normalise_time_series(df: pandasDF,
                           cols: list) -> pandasDF:
     '''
-    For a set of columns, find the max-value per row, and normalise those rows
-    based on the max value (scaling everything in the 0-1 range).
+    For a set of columns normalise those rows in the 0-1 range.
     '''
-    df[cols] = df[cols].div(df[cols].max(axis = 1), axis = 0)
+    df[cols] = df[cols].apply(lambda x: (x-x.min())/(x.max()-x.min()),
+                              axis = 1,
+                              )
     return df
 
 def get_time_series_data(nn_config: dict,

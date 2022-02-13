@@ -176,7 +176,21 @@ def make_trades(Open: np_arr,
                 if Open[n] > 0:
                     price = Open[n]
                     bought.append(n)
-                    holding = True
+                    
+                    # Check if the profit/stop are hit on the same day
+                    # NOTE: Sometimes both can happen, but this is such a rare
+                    # event that it does not harm the input data to the nn
+                    if 100*(High[n]/price - 1) >= profit:
+                        percs.append(profit)
+                        sold.append(n)
+                
+                    elif 100*(Low[n]/price - 1) <= stop:
+                        percs.append(stop)
+                        sold.append(n)
+                        
+                    else:
+                        holding = True
+                    
                     continue
             
         if holding:
