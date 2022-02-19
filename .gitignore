@@ -1,5 +1,8 @@
 data/
+research/
 nn/data/
 nn/models/
+ga/strategies/
 nn/__pycache__/
+ga/__pycache__/
 utils/__pycache__/

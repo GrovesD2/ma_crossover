@@ -1,0 +1,348 @@
+'''
+Functionality for running the genetic algorithm
+'''
+
+import os
+import pickle
+import random
+import numpy as np
+import pandas as pd
+
+# User defined functions
+from utils import tickers, strategy
+
+# For type hinting
+from typing import Tuple
+from numpy import array as np_arr
+from pandas import DataFrame as pandasDF
+
+def main(ga_config: dict):
+    '''
+    Main running function for the genetic algorithm
+
+    Parameters
+    ----------
+    ga_config : dict
+        Config params for the algorithm
+
+    Returns
+    -------
+    best_strat : dict
+        The optimised strategy parameters
+    '''
+    
+    # Initialise all the parameters needed to start the evolution
+    data, strats, fit_arr, strats_to_calc = init_ga(ga_config)
+    
+    # This gathers the number of strategies to change on each evolution
+    perc_change = int((1-ga_config['keep perc'])*ga_config['num strats'])
+
+    # Start the optimisation procedure
+    for evl in range(0, ga_config['num evolutions']):
+        
+        # Calculate the fitness for the strategies
+        fit_arr = get_fitness(data,
+                              ga_config,
+                              strats,
+                              fit_arr,
+                              strats_to_calc,
+                              )
+        
+        # Rank the strategies, and select the strategies to change
+        ranks = fit_arr[fit_arr[:, 1].argsort()]
+        good_strats = ranks[perc_change:, 0].astype(np.int32)
+        bad_strats = ranks[:perc_change, 0].astype(np.int32)
+        
+        # Split the bad strategies into 3 approx equal sets to make modifications
+        splits = np.array_split(bad_strats, 3)
+        
+        # Replace bad strategies with random new ones
+        for strat in splits[0]:
+            strats[str(strat)] = get_random_strat()
+            
+        # Add random perturbations to good strategies
+        for strat in splits[1]:
+            rand_strat = str(random.choice(good_strats))
+            strats[str(strat)] = perturb_strat(strats[rand_strat])
+            
+        # Breed good strategies to make another
+        for strat in splits[2]:
+            strats[str(strat)] = breed_good_strats(good_strats,
+                                                   strats)
+            
+        # Tell the optimiser which strats have been changed to calculate the
+        # fitness function of. This saves time on recalculating the good strats
+        strats_to_calc = bad_strats 
+        
+        # Print out evolution stats 
+        print(f'\nEvolution {evl}')
+        for count, strat in enumerate(np.flipud(good_strats[-5:])):
+            print(str(count) + '. Strategy: ' +  str(strat) + ', fitness: ' + 
+                  str(fit_arr[strat, 1])
+                  )
+        print('----------------------------------------------')
+        
+    # Print the final results and save to json
+    best_strat = strats[str(good_strats[-1])]
+    print_and_save(best_strat,
+                   ga_config)
+        
+    return best_strat
+
+def print_and_save(strat: dict,
+                   ga_config: dict):
+    '''
+    Print the optimal parameters and save to a pickle file
+    '''
+    
+    print('Most optimal parameters are: ')
+    for k, v in strat.items():
+        print(k + ': ' + str(v))
+    
+    with open('ga/strategies/' + ga_config['save name'] + '.pkl', 'wb') as f:
+        pickle.dump(strat, f)
+        
+    return
+    
+def init_ga(ga_config: dict) -> Tuple[pandasDF, dict, np_arr, np_arr]:
+    '''
+    Initialise any parameters and data needed for the genetic algorithm
+
+    Parameters
+    ----------
+    ga_config : dict
+        Config controls for the genetic algorithm
+
+    Returns
+    -------
+    data : pandasDF
+        Price data for all tickers we are optimising
+    strats : dict
+        A random set of strategies
+    fit_arr : np_arr
+        An array to store the fitness values in
+    strats_to_calc : np_arr
+        An array to indicate which strategies to calculate the fitness for
+    '''
+    
+    # Check if the filing structure is correct
+    check_folder()
+    
+    # Get a random set of tickers, and load in the data we will optimise
+    ticker_list = tickers.get_random_tickers(ga_config['num tickers'])
+    data = get_price_data(ticker_list)
+    
+    # Initialise with a set of random strategies
+    strats = {f'{n}': get_random_strat() 
+              for n in range(0, ga_config['num strats'])}
+    
+    # Initialise an empty array to store the fitness values in
+    fit_arr = np.vstack((np.arange(0, ga_config['num strats']),
+                         np.zeros(ga_config['num strats']),
+                         ),
+                        ).T
+    
+    # Initialise the array to determine which strategies to calculate the
+    # fitness for. In this case its all of them, but in the algo we only need
+    # to calculate the fresh strategies
+    strats_to_calc = np.arange(0, ga_config['num strats'])
+    
+    return data, strats, fit_arr, strats_to_calc
+    
+def get_fitness(data: pandasDF,
+                ga_config: dict,
+                strats: dict,
+                fit_arr: np_arr,
+                strats_to_calc: np_arr) -> np_arr:
+    '''
+    Calculate the fitness function for each strategy defined in strats_to_calc.
+    This runs the buy/sell algorithm on each ticker, and then uses the mean
+    of all results to generate the fitness value for each strategy.
+
+    Parameters
+    ----------
+    data : pandasDF
+        Price data for all tickers we are optimising
+    ga_config : dict
+        Config controls for the genetic algo
+    strats : dict
+        All strategies generated by the genetic algo
+    fit_arr : np_arr
+        An array to store the fitness results for each strategy
+    strats_to_calc : np_arr
+        Which strategies to calculate the fitness value for
+
+    Returns
+    -------
+    fit_arr : np_arr
+        The recalculated fitness values for the new strategies
+    '''
+    
+    for strat in strats_to_calc:
+        
+        # Initialise a list to store the result of this strategy
+        res = []
+        
+        for ticker in data['ticker'].unique():
+            
+            # Add the strategy columns to the dataframe
+            df_strat = data[data['ticker'] == ticker].reset_index().drop(columns = ['index'])
+            df_strat = strategy.add_strat_cols(df_strat,
+                                               strats[str(strat)],
+                                               )
+            
+            # Run the buy/sell algorithm and produce the statistics
+            _, stats = strategy.run_strategy(df_strat,
+                                             strats[str(strat)])
+            
+            # We want to strongly encourage the algorithm to not take any strat
+            # which performes trades less than min_trades, this prevents some
+            # curve fitting to very rare events
+            if stats['number of trades'] > ga_config['min trades']:
+                res.append(stats[ga_config['fitness']])
+            else:
+                res.append(-100)
+            
+        # Find the average result for this strategy
+        fit_arr[strat, 1] = np.mean(res)
+        
+    return fit_arr
+        
+def get_price_data(tickers: list) -> pandasDF:
+    '''
+    Generate a dataframe which contains all the price data for each ticker
+
+    Parameters
+    ----------
+    tickers : list
+        List of tickers to optimise the strategy for
+
+    Returns
+    -------
+    df : pandasDF
+        A dataframe of all price data for each ticker.
+    '''
+    
+    dfs = []
+    for ticker in tickers:
+        df = pd.read_csv(f'data/{ticker}.csv')
+        df['ticker'] = ticker
+        dfs.append(df)
+        
+    return pd.concat(dfs)
+
+def get_random_strat() -> dict:
+    '''
+    Generate a random strategy.
+
+    Parameters
+    ----------
+    None
+
+    Returns
+    -------
+    strat : dict
+        A config with the strategy params
+    '''
+    
+    # Lists to randomly select from
+    ma_types = ['rolling', 'exp']
+    price_types = ['Open', 'Low', 'High', 'Close']
+    
+    # Initialise an empty dictionary to store the solution in
+    strat = {}
+    
+    # Randomly select the moving average types
+    strat['slow type'] = random.choice(ma_types)
+    strat['fast type'] = random.choice(ma_types)
+    
+    # Randomly select the price field to consider
+    strat['slow price'] = random.choice(price_types)
+    strat['fast price'] = random.choice(price_types)
+    
+    # Randomly generate the number of days for the strategy
+    strat['slow days'] = np.random.randint(3, 300)
+    strat['fast days'] = np.random.randint(3, 300)
+    
+    # Randomly generate the profit target, stop stop, and max holding time
+    strat['profit'] = np.random.uniform(0.1, 40)
+    strat['stop'] = np.random.uniform(-40, -0.1)
+    strat['max hold'] = np.random.randint(1, 300)
+    
+    return check_params(strat)
+
+def check_params(strat: dict) -> dict:
+    '''
+    Check if the parameters for the strategy make sense, adjust if they dont
+    '''
+    
+    # Check to see if the moving average days are > 2
+    if strat['slow days'] < 3:
+        strat['slow days'] = 3
+    if strat['fast days'] < 3:
+        strat['fast days'] = 3
+    
+    # Check if the slow days is more than the fast days
+    if strat['slow days'] <= strat['fast days']:
+        strat['slow days'] = strat['fast days'] + 1
+        
+    # Check to see if the profit is +ve and stop is -ve
+    if strat['profit'] <= 0:
+        strat['profit'] = 0.1
+        
+    if strat['stop'] >= 0:
+        strat['stop'] = -0.1
+        
+    # Checl the max-holding days is not less than a day
+    if strat['max hold'] < 1:
+        strat['max_hold'] = 1
+    
+    return strat
+
+def breed_good_strats(good_strats: np_arr,
+                      strats: dict) -> dict:
+    '''
+    Taking parameters from good strategies, breed a new one.
+    '''
+    
+    new_strat = {}
+    for param in strats['0'].keys():
+        rand_strat = random.choice(good_strats)
+        new_strat[param] = strats[str(rand_strat)][param]
+        
+    return check_params(new_strat)
+
+def perturb_strat(strat: dict) -> dict:
+    '''
+    Perturb the parameters of the strategy slightly to generate a new strategy
+    '''
+    
+    # Lists to randomly select from
+    ma_types = ['rolling', 'exp']
+    price_types = ['Open', 'Low', 'High', 'Close']
+    
+    # Randomly select the moving average types
+    strat['slow type'] = random.choice(ma_types)
+    strat['fast type'] = random.choice(ma_types)
+    
+    # Randomly select the price field to consider
+    strat['slow price'] = random.choice(price_types)
+    strat['fast price'] = random.choice(price_types)
+    
+    # Randomly generate the number of days for the strategy
+    strat['slow days'] += np.random.randint(-5, 5)
+    strat['fast days'] += np.random.randint(-5, 5)
+    
+    # Randomly generate the profit target, stop loss, and max holding time
+    strat['profit'] += np.random.uniform(-2, 2)
+    strat['stop'] += np.random.uniform(-2, 2)
+    strat['max hold'] += np.random.randint(-2, 2)
+    
+    return check_params(strat)
+
+def check_folder():
+    '''
+    Check if the ga strategies folder exists, if not, create it
+    '''
+    if not os.path.isdir('ga/strategies'):
+        os.mkdir('ga/strategies')

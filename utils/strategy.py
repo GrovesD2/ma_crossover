@@ -265,12 +265,23 @@ def get_strat_stats(percs: np_arr,
         The statistics from this simulation
     '''
     
-    return {'win rate': percs[percs>0].shape[0]/percs.shape[0],
-            'avg profit': np.mean(percs),
-            'median profit': np.median(percs),
-            'mean hold': np.mean(hold),
-            'median hold': np.median(hold),
-            'min hold': np.min(hold),
-            'max hold': np.max(hold),
-            'number of trades': percs.shape[0]
-            }
+    if percs.shape[0] > 0:
+        return{'win rate': 100*percs[percs>0].shape[0]/percs.shape[0],
+               'avg profit': np.mean(percs),
+               'median profit': np.median(percs),
+               'mean hold': np.mean(hold),
+               'median hold': np.median(hold),
+               'min hold': np.min(hold),
+               'max hold': np.max(hold),
+               'number of trades': percs.shape[0]
+               } 
+    else:
+        return{'win rate': 0,
+               'avg profit': 0,
+               'median profit': 0,
+               'mean hold': 0,
+               'median hold': 0,
+               'min hold': 0,
+               'max hold': 0,
+               'number of trades': 0
+               } 
