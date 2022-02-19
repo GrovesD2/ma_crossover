@@ -96,11 +96,11 @@ def run_strategy(df: pandasDF,
 
     '''
     # Perform the buying and selling
-    percs, bought, sold = make_trades(df['Open'].values,
-                                      df['Low'].values,
-                                      df['High'].values,
-                                      df['slow_ma'].values,
-                                      df['fast_ma'].values,
+    percs, bought, sold = make_trades(df['Open'].values.astype(np.float64),
+                                      df['Low'].values.astype(np.float64),
+                                      df['High'].values.astype(np.float64),
+                                      df['slow_ma'].values.astype(np.float64),
+                                      df['fast_ma'].values.astype(np.float64),
                                       config['profit'],
                                       config['stop'],
                                       config['max hold'])

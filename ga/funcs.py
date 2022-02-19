@@ -58,17 +58,21 @@ def main(ga_config: dict) -> dict:
         
         # Replace bad strategies with random new ones
         for strat in splits[0]:
-            strats[str(strat)] = get_random_strat()
+            strats[str(strat)] = get_random_strat(ga_config)
             
         # Add random perturbations to good strategies
         for strat in splits[1]:
             rand_strat = str(random.choice(good_strats))
-            strats[str(strat)] = perturb_strat(strats[rand_strat])
+            strats[str(strat)] = perturb_strat(strats[rand_strat],
+                                               ga_config,
+                                               )
             
         # Breed good strategies to make another
         for strat in splits[2]:
             strats[str(strat)] = breed_good_strats(good_strats,
-                                                   strats)
+                                                   strats,
+                                                   ga_config,
+                                                   )
             
         # Tell the optimiser which strats have been changed to calculate the
         # fitness function of. This saves time on recalculating the good strats
@@ -142,12 +146,13 @@ def ticker_test(tickers: list,
         win_rate.append(stats['win rate'])
         avg_profit.append(stats['avg profit'])
         mean_hold.append(stats['mean hold'])
-        max_hold.append(stats['min hold'])
+        max_hold.append(stats['max hold'])
         num_trades.append(stats['number of trades'])
         
     # Print the summaries
     print('Average win rate: ', np.mean(win_rate))
     print('Lowest win rate: ', np.min(win_rate))
+    print('Average profit: ', np.mean(avg_profit))
     print('Maximum hold time: ', np.max(max_hold))
     print('Mean hold time: ', np.mean(mean_hold))
     print('Mean number of trades: ', np.mean(num_trades))
@@ -199,7 +204,7 @@ def init_ga(ga_config: dict) -> Tuple[pandasDF, dict, np_arr, np_arr]:
     data = get_price_data(ticker_list)
     
     # Initialise with a set of random strategies
-    strats = {f'{n}': get_random_strat() 
+    strats = {f'{n}': get_random_strat(ga_config) 
               for n in range(0, ga_config['num strats'])}
     
     # Initialise an empty array to store the fitness values in
@@ -297,13 +302,14 @@ def get_price_data(tickers: list) -> pandasDF:
         
     return pd.concat(dfs)
 
-def get_random_strat() -> dict:
+def get_random_strat(ga_config: dict) -> dict:
     '''
     Generate a random strategy.
 
     Parameters
     ----------
-    None
+    ga_config : dict
+        The config params for the ga
 
     Returns
     -------
@@ -335,9 +341,10 @@ def get_random_strat() -> dict:
     strat['stop'] = np.random.uniform(-40, -0.1)
     strat['max hold'] = np.random.randint(1, 300)
     
-    return check_params(strat)
+    return check_params(strat, ga_config)
 
-def check_params(strat: dict) -> dict:
+def check_params(strat: dict,
+                 ga_config: dict) -> dict:
     '''
     Check if the parameters for the strategy make sense, adjust if they dont
     '''
@@ -359,14 +366,18 @@ def check_params(strat: dict) -> dict:
     if strat['stop'] >= 0:
         strat['stop'] = -0.1
         
-    # Checl the max-holding days is not less than a day
+    # Check the max-holding days is not less than a day
     if strat['max hold'] < 1:
         strat['max hold'] = 1
     
+    if strat['max hold'] > ga_config['max hold']:
+        strat['max hold'] = ga_config['max hold']
+        
     return strat
 
 def breed_good_strats(good_strats: np_arr,
-                      strats: dict) -> dict:
+                      strats: dict,
+                      ga_config: dict) -> dict:
     '''
     Taking parameters from good strategies, breed a new one.
     '''
@@ -376,9 +387,10 @@ def breed_good_strats(good_strats: np_arr,
         rand_strat = random.choice(good_strats)
         new_strat[param] = strats[str(rand_strat)][param]
         
-    return check_params(new_strat)
+    return check_params(new_strat, ga_config)
 
-def perturb_strat(strat: dict) -> dict:
+def perturb_strat(strat: dict,
+                  ga_config: dict) -> dict:
     '''
     Perturb the parameters of the strategy slightly to generate a new strategy
     '''
@@ -404,7 +416,7 @@ def perturb_strat(strat: dict) -> dict:
     strat['stop'] += np.random.uniform(-2, 2)
     strat['max hold'] += np.random.randint(-2, 2)
     
-    return check_params(strat)
+    return check_params(strat, ga_config)
 
 def check_folder():
     '''
