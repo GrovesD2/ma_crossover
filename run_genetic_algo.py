@@ -7,19 +7,16 @@ if __name__ == "__main__":
                  'num strats': 30, # Number of strategies to try on each evolution
                  'num tickers': 15, # Number of tickers to optimise over
                  'num evolutions': 30, # Number of evolutions to perform
-                 'min trades': 40, # Minimum trades the strategy performs per ticker
+                 'keep perc': 0.4, # Percentage of top models to keep on each evolution
                  
                  # What to optimise, can be 'win rate', 'avg profit', 'median profit'
                  'fitness': 'avg profit',
                  
-                 # Constrain to the maximum number of holding days
-                 'max hold': 40,
-                 
-                 # Algorithm params, all 'percentages' must be less than 1
-                 'keep perc': 0.4, # Percentage of top models to keep on each evolution
+                 # Constraints
+                 'max hold': 40, # Maximum number of holding days
+                 'min trades': 40, # Minimum trades the strategy performs per ticker
                  
                  # Out of sample testing and saving name
-                 'out of sample test': False, # Test the optimised params on additional tickers
                  'num tickers test': 100, # Number of tickers to perform the out of sample testing
                  'save name': 'simple', # Save name for the optimised params
                  }
