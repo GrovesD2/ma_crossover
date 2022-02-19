@@ -12,6 +12,16 @@ def get_random_tickers(n: int) -> list:
     '''
     return random.sample(get_all_ticker_names(), n)
 
+def get_tickers_exc_sample(n: int,
+                           exclude: list) -> list:
+    '''
+    Get a random selection of tickers from all available, excluding any tickers
+    that are in the exclude list.
+    '''
+    all_tickers = get_all_ticker_names()
+    ticker_sample = [ticker for ticker in all_tickers if ticker not in exclude]
+    return random.sample(ticker_sample, n)
+
 def get_all_ticker_names():
     '''
     Get a list of all ticker names in the data-directory.

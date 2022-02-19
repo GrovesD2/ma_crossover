@@ -16,7 +16,7 @@ from typing import Tuple
 from numpy import array as np_arr
 from pandas import DataFrame as pandasDF
 
-def main(ga_config: dict):
+def main(ga_config: dict) -> dict:
     '''
     Main running function for the genetic algorithm
 
@@ -77,17 +77,82 @@ def main(ga_config: dict):
         # Print out evolution stats 
         print(f'\nEvolution {evl}')
         for count, strat in enumerate(np.flipud(good_strats[-5:])):
-            print(str(count) + '. Strategy: ' +  str(strat) + ', fitness: ' + 
+            print(str(count) + '. Strategy: ' +  str(strat) + 
+                  ', ' + ga_config['fitness'] + ': ' + 
                   str(fit_arr[strat, 1])
                   )
         print('----------------------------------------------')
         
     # Print the final results and save to json
     best_strat = strats[str(good_strats[-1])]
+    best_strat['ticker opt'] = data['ticker'].unique().tolist()
     print_and_save(best_strat,
                    ga_config)
         
     return best_strat
+
+def out_sample_test(strat: dict,
+                    ga_config: dict):
+    '''
+    Perform in, and out of sample testing for evaluating the outcome of the ga
+    '''
+
+    # Get tickers to perform the out of sample testing
+    out_sample_tickers = tickers.get_tickers_exc_sample(ga_config['num tickers test'],
+                                                        strat['ticker opt'],
+                                                        )
+    
+    # In sample test
+    print('\n----------------------------------------------')
+    print('In sample testing results: ')
+    ticker_test(strat['ticker opt'],
+                strat,
+                )
+    print('----------------------------------------------')
+    
+    # Out of sample test
+    print('\n----------------------------------------------')
+    print('Out of sample testing results: ')
+    ticker_test(out_sample_tickers,
+                strat,
+                )
+    print('----------------------------------------------')
+    
+    return
+
+def ticker_test(tickers: list,
+                strat: dict):
+    '''
+    Given a set of tickers, run the buy/sell algorithm and produce average
+    statistics for the set of tickers
+    '''
+    
+    # Key performance metric storage lists
+    win_rate = []
+    avg_profit = []
+    mean_hold = []
+    max_hold = []
+    num_trades = []
+    
+    for ticker in tickers:
+        df = pd.read_csv(f'data/{ticker}.csv')
+        df = strategy.add_strat_cols(df, strat)
+        _, stats = strategy.run_strategy(df, strat)
+        
+        win_rate.append(stats['win rate'])
+        avg_profit.append(stats['avg profit'])
+        mean_hold.append(stats['mean hold'])
+        max_hold.append(stats['min hold'])
+        num_trades.append(stats['number of trades'])
+        
+    # Print the summaries
+    print('Average win rate: ', np.mean(win_rate))
+    print('Lowest win rate: ', np.min(win_rate))
+    print('Maximum hold time: ', np.max(max_hold))
+    print('Mean hold time: ', np.mean(mean_hold))
+    print('Mean number of trades: ', np.mean(num_trades))
+    
+    return
 
 def print_and_save(strat: dict,
                    ga_config: dict):
@@ -97,7 +162,8 @@ def print_and_save(strat: dict,
     
     print('Most optimal parameters are: ')
     for k, v in strat.items():
-        print(k + ': ' + str(v))
+        if k != 'ticker opt':
+            print(k + ': ' + str(v))
     
     with open('ga/strategies/' + ga_config['save name'] + '.pkl', 'wb') as f:
         pickle.dump(strat, f)
@@ -295,7 +361,7 @@ def check_params(strat: dict) -> dict:
         
     # Checl the max-holding days is not less than a day
     if strat['max hold'] < 1:
-        strat['max_hold'] = 1
+        strat['max hold'] = 1
     
     return strat
 
