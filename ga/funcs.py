@@ -63,7 +63,7 @@ def main(ga_config: dict) -> dict:
         # Add random perturbations to good strategies
         for strat in splits[1]:
             rand_strat = str(random.choice(good_strats))
-            strats[str(strat)] = perturb_strat(strats[rand_strat],
+            strats[str(strat)] = perturb_strat(strats[rand_strat].copy(),
                                                ga_config,
                                                )
             
@@ -264,7 +264,8 @@ def get_fitness(data: pandasDF,
             
             # Run the buy/sell algorithm and produce the statistics
             _, stats = strategy.run_strategy(df_strat,
-                                             strats[str(strat)])
+                                             strats[str(strat)],
+                                             )
             
             # We want to strongly encourage the algorithm to not take any strat
             # which performes trades less than min_trades, this prevents some
