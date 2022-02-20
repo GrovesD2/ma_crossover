@@ -140,7 +140,7 @@ def ticker_test(tickers: list,
     
     for ticker in tickers:
         df = pd.read_csv(f'data/{ticker}.csv')
-        df = strategy.add_strat_cols(df, strat)
+        df = strategy.add_strat_cols(df, strat)        
         _, stats = strategy.run_strategy(df, strat)
         
         win_rate.append(stats['win rate'])

@@ -73,7 +73,7 @@ def add_strat_cols(df: pandasDF,
                     config['fast price'],
                     config['fast days'])
     
-    return df.reset_index().drop(columns = 'index').dropna()
+    return df.dropna().reset_index().drop(columns = 'index')
 
 def run_strategy(df: pandasDF,
                  config: dict) -> Tuple[pandasDF, dict]:
