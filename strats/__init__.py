@@ -1,0 +1,1 @@
+from strats import ma_crossover

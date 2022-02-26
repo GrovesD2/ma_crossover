@@ -9,6 +9,7 @@ import numpy as np
 import pandas as pd
 
 # User defined functions
+import strats as strat_lib
 from utils import tickers, strategy
 
 # For type hinting
@@ -111,6 +112,7 @@ def out_sample_test(strat: dict,
     print('In sample testing results: ')
     ticker_test(strat['ticker opt'],
                 strat,
+                ga_config,
                 )
     print('----------------------------------------------')
     
@@ -119,13 +121,15 @@ def out_sample_test(strat: dict,
     print('Out of sample testing results: ')
     ticker_test(out_sample_tickers,
                 strat,
+                ga_config,
                 )
     print('----------------------------------------------')
     
     return
 
 def ticker_test(tickers: list,
-                strat: dict):
+                strat: dict,
+                ga_config: dict):
     '''
     Given a set of tickers, run the buy/sell algorithm and produce average
     statistics for the set of tickers
@@ -140,8 +144,8 @@ def ticker_test(tickers: list,
     
     for ticker in tickers:
         df = pd.read_csv(f'data/{ticker}.csv')
-        df = strategy.add_strat_cols(df, strat)        
-        _, stats = strategy.run_strategy(df, strat)
+        df = strategy.add_strat_cols(df, strat, ga_config['strat'])        
+        _, stats = strategy.run_strategy(df, strat, ga_config['strat'])
         
         win_rate.append(stats['win rate'])
         avg_profit.append(stats['avg profit'])
@@ -260,11 +264,13 @@ def get_fitness(data: pandasDF,
             df_strat = data[data['ticker'] == ticker].reset_index().drop(columns = ['index'])
             df_strat = strategy.add_strat_cols(df_strat,
                                                strats[str(strat)],
+                                               ga_config['strat'],
                                                )
             
             # Run the buy/sell algorithm and produce the statistics
             _, stats = strategy.run_strategy(df_strat,
                                              strats[str(strat)],
+                                             ga_config['strat'],
                                              )
             
             # We want to strongly encourage the algorithm to not take any strat
@@ -303,78 +309,6 @@ def get_price_data(tickers: list) -> pandasDF:
         
     return pd.concat(dfs)
 
-def get_random_strat(ga_config: dict) -> dict:
-    '''
-    Generate a random strategy.
-
-    Parameters
-    ----------
-    ga_config : dict
-        The config params for the ga
-
-    Returns
-    -------
-    strat : dict
-        A config with the strategy params
-    '''
-    
-    # Lists to randomly select from
-    ma_types = ['rolling', 'exp']
-    price_types = ['Open', 'Low', 'High', 'Close']
-    
-    # Initialise an empty dictionary to store the solution in
-    strat = {}
-    
-    # Randomly select the moving average types
-    strat['slow type'] = random.choice(ma_types)
-    strat['fast type'] = random.choice(ma_types)
-    
-    # Randomly select the price field to consider
-    strat['slow price'] = random.choice(price_types)
-    strat['fast price'] = random.choice(price_types)
-    
-    # Randomly generate the number of days for the strategy
-    strat['slow days'] = np.random.randint(3, 300)
-    strat['fast days'] = np.random.randint(3, 300)
-    
-    # Randomly generate the profit target, stop stop, and max holding time
-    strat['profit'] = np.random.uniform(0.1, 40)
-    strat['stop'] = np.random.uniform(-40, -0.1)
-    strat['max hold'] = np.random.randint(1, 300)
-    
-    return check_params(strat, ga_config)
-
-def check_params(strat: dict,
-                 ga_config: dict) -> dict:
-    '''
-    Check if the parameters for the strategy make sense, adjust if they dont
-    '''
-    
-    # Check to see if the moving average days are > 2
-    if strat['slow days'] < 3:
-        strat['slow days'] = 3
-    if strat['fast days'] < 3:
-        strat['fast days'] = 3
-    
-    # Check if the slow days is more than the fast days
-    if strat['slow days'] <= strat['fast days']:
-        strat['slow days'] = strat['fast days'] + 1
-        
-    # Check to see if the profit is +ve and stop is -ve
-    if strat['profit'] <= 0:
-        strat['profit'] = 0.1
-        
-    if strat['stop'] >= 0:
-        strat['stop'] = -0.1
-        
-    # Check the max-holding days is not less than a day
-    if strat['max hold'] < 1:
-        strat['max hold'] = 1
-    
-    if strat['max hold'] > ga_config['max hold']:
-        strat['max hold'] = ga_config['max hold']
-        
-    return strat
 
 def breed_good_strats(good_strats: np_arr,
                       strats: dict,
@@ -390,34 +324,29 @@ def breed_good_strats(good_strats: np_arr,
         
     return check_params(new_strat, ga_config)
 
+def get_random_strat(ga_config: dict) -> dict:
+    '''
+    Get a randomly generated strategy
+    '''
+    if ga_config['strat'] == 'simple ma crossover':
+        return strat_lib.ma_crossover.get_random_strat(ga_config)
+
+def check_params(strat: dict,
+                 ga_config: dict) -> dict:
+    '''
+    Check if the parameters for the strategy make sense, adjust if they dont
+    '''
+    if ga_config['strat'] == 'simple ma crossover':
+        return strat_lib.ma_crossover.check_params(strat, ga_config)
+    
 def perturb_strat(strat: dict,
                   ga_config: dict) -> dict:
     '''
     Perturb the parameters of the strategy slightly to generate a new strategy
     '''
-    
-    # Lists to randomly select from
-    ma_types = ['rolling', 'exp']
-    price_types = ['Open', 'Low', 'High', 'Close']
-    
-    # Randomly select the moving average types
-    strat['slow type'] = random.choice(ma_types)
-    strat['fast type'] = random.choice(ma_types)
-    
-    # Randomly select the price field to consider
-    strat['slow price'] = random.choice(price_types)
-    strat['fast price'] = random.choice(price_types)
-    
-    # Randomly generate the number of days for the strategy
-    strat['slow days'] += np.random.randint(-5, 5)
-    strat['fast days'] += np.random.randint(-5, 5)
-    
-    # Randomly generate the profit target, stop loss, and max holding time
-    strat['profit'] += np.random.uniform(-2, 2)
-    strat['stop'] += np.random.uniform(-2, 2)
-    strat['max hold'] += np.random.randint(-2, 2)
-    
-    return check_params(strat, ga_config)
+    if ga_config['strat'] == 'simple ma crossover':
+        strat = strat_lib.ma_crossover.perturb_strat(strat, ga_config)
+        return check_params(strat, ga_config)
 
 def check_folder():
     '''
