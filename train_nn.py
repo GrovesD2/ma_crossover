@@ -11,14 +11,14 @@ if __name__ == "__main__":
                  'model save name': 'simple',
                  'time lags': range(1, 26), # Which days back to include in the nn features
                  'train perc': 0.8, # Train/test split
-                 'model type': 'bidirectional', # Option to chose 'vanilla', 'lstm', or 'bidirectional'
-                 'classes': 3, 
-                 'nodes': 64, # Number of nodes in layer 1
+                 'model type': 'vanilla', # Option to chose 'vanilla', 'lstm', or 'bidirectional'
+                 'classes': 4, 
+                 'nodes': 512, # Number of nodes in layer 1
                  'dropout perc': 0.2, # Dropout percentage of any dropout layers
-                 'epochs': 4, 
+                 'epochs': 10, 
                  'batch size': 8, 
-                 'learn rate': 1e-4,
-                 'decay rate': 1e-5,
+                 'learn rate': 1e-3,
+                 'decay rate': 1e-4,
                  'validation split': 0.1}
     
     model.main(nn_config)

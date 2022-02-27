@@ -222,9 +222,11 @@ def labeller(percs, profit, stop):
     out = []
     for perc in percs:
         if int(perc) == profit:
-            out.append(2)
+            out.append(3)
         elif int(perc) == stop:
             out.append(0)
+        elif perc > 0:
+            out.append(2)
         else:
             out.append(1)
     

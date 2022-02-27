@@ -6,4 +6,5 @@ ga/strategies/
 nn/__pycache__/
 ga/__pycache__/
 utils/__pycache__/
+strats/__pycache__/
 .ipynb_checkpoints/

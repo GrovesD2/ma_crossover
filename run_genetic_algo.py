@@ -4,6 +4,9 @@ if __name__ == "__main__":
     
     ga_config = {
                  # Strategy to optimise
+                 # Can use:
+                 # - simple bollinger band
+                 # - simple ma crossover
                  'strat': 'simple bollinger band',
         
                  # Basic controls for the genetic algo
@@ -13,16 +16,17 @@ if __name__ == "__main__":
                  'keep perc': 0.2, # Percentage of top models to keep on each evolution
                  
                  # What to optimise, can be 'win rate', 'avg profit', 'median profit'
-                 'fitness': 'avg profit',
+                 'fitness': 'win rate',
                  
                  # Constraints
-                 'max hold': 15, # Maximum number of holding days
+                 'max hold': 5, # Maximum number of holding days
                  'min trades': 40, # Minimum trades the strategy performs per ticker
-                 'max stop': -10, # Maximum stop loss to consider per trade
+                 'max stop': -5, # Maximum stop loss to consider per trade
+                 'min profit': 5, # Minimum profit target per trade
                  
                  # Out of sample testing and saving name
                  'num tickers test': 200, # Number of tickers to perform the out of sample testing
-                 'save name': 'profit_boll_band', # Save name for the optimised params
+                 'save name': 'wr_boll_short', # Save name for the optimised params
                  }
 
     # Run the algorithm

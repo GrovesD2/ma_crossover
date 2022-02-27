@@ -8,7 +8,7 @@ if __name__ == "__main__":
     # Configuration settings for the NN data
     nn_config = {'strat name': 'simple bollinger band',
                  'save name': 'simple', # Data save name 
-                 'tickers': 100, # How many tickers used to train the nn
+                 'tickers': 150, # How many tickers used to train the nn
                  'time lags': range(1, 26), # Which days back to include in the nn features
                  }
 

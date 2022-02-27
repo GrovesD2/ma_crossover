@@ -83,7 +83,7 @@ def user_defined() -> list:
     tickers: list
         A list of tickers to download.
     '''
-    return pd.read_csv('tickers.csv')['ticker'].tolist()
+    return pd.read_csv('utils/tickers.csv')['ticker'].tolist()
     
 def spy_tickers() -> list:
     '''

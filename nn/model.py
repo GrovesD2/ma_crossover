@@ -89,11 +89,10 @@ def equalise_classes(df: pandasDF) -> pandasDF:
     
     # Print the summary
     print('Number of examples for each class: ')
-    print('Class 0: ', num_each_class[0])
-    print('Class 1: ', num_each_class[1])
-    print('Class 2: ', num_each_class[2])
+    for n in range(0, len(num_each_class)):
+        print('Class ' + str(n) + ': ' + str(num_each_class[n]))
     print('\nDo you wish to equalise the classes? (y/n)')
-    
+  
     opt = input()
     
     # If the equal classes are wanted, randomly select n examples from each class

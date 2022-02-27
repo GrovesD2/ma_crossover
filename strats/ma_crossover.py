@@ -281,6 +281,10 @@ def check_params(strat: dict,
     # Check the maximum stop loss criteria
     if strat['stop'] <= ga_config['max stop']:
             strat['stop'] = ga_config['max stop']
+            
+    # Check the minimum profit target criteria
+    if strat['profit'] <= ga_config['min profit']:
+        strat['profit'] = ga_config['min profit']
         
     return strat
 

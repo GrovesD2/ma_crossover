@@ -299,6 +299,10 @@ def check_params(strat: dict,
     if strat['stop'] <= ga_config['max stop']:
         strat['stop'] = ga_config['max stop']
         
+    # Check the minimum profit target criteria
+    if strat['profit'] <= ga_config['min profit']:
+        strat['profit'] = ga_config['min profit']
+        
     return strat
 
 def get_random_strat(ga_config: dict) -> dict:

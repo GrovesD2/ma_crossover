@@ -31,16 +31,16 @@ def get_config(strat: str) -> dict:
                 }
     
     elif strat == 'simple bollinger band':
-        return {'mean type': 'rolling',
+        return {'mean type': 'exp',
                 'std type': 'exp',
                 'mean price': 'Open',
-                'std price': 'Open',
-                'mean days': 86,
-                'std days': 67,
-                'factor': -0.2157809407816873,
-                'profit': 10,
-                'stop': -10,
-                'max hold': 15,
+                'std price': 'Close',
+                'mean days': 28,
+                'std days': 156,
+                'factor': -1.05,
+                'profit': 3,
+                'stop': -2,
+                'max hold': 5,
                 
                 'price feats': ['Open', 'Low', 'High', 'Close', 'boll_lower'],
                 'other feats': ['Volume'],
