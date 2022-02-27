@@ -333,7 +333,6 @@ def get_random_strat(ga_config: dict) -> dict:
     elif ga_config['strat'] == 'simple bollinger band':
         return strat_lib.boll_band.get_random_strat(ga_config)
         
-
 def check_params(strat: dict,
                  ga_config: dict) -> dict:
     '''

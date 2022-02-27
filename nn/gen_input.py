@@ -40,19 +40,19 @@ def main(nn_config: dict,
                               ticker_list)
 
     # Drop the columns we no longer want for the nn
-    df = df.drop(columns = (nn_config['price feats']
-                            + nn_config['other feats']
-                            + nn_config['drop cols']
+    df = df.drop(columns = (strat_config['price feats']
+                            + strat_config['other feats']
+                            + strat_config['drop cols']
                             + ['Profit/Loss']),
                  )
     
     # Normalise the time-series for price related cols, and other features
-    df = normalise_prices(df, nn_config['price feats'])
-    df = normalise_non_price(df, nn_config['other feats'])
+    df = normalise_prices(df, strat_config['price feats'])
+    df = normalise_non_price(df, strat_config['other feats'])
     
     # Drop any null entries, to stop any bad-data getting into the nn
     df = df.dropna()
-    
+
     # Save the input data into the data-folder
     df.to_csv('nn/data/' + nn_config['save name'] + '.csv',
               index = False)
@@ -131,18 +131,24 @@ def get_time_series_data(nn_config: dict,
     # the data for input into the nn
     for ticker in ticker_list:
         df = pd.read_csv(f'data/{ticker}.csv')
-        df = strategy.add_strat_cols(df, strat_config)
+        df = strategy.add_strat_cols(df,
+                                     strat_config,
+                                     nn_config['strat name'],
+                                     )
         
         # Sometimes the data included is too small to calculate rolling averages,
         # this next line of code removes that.
         if len(df) > 0:
-            df_strat, _ = strategy.run_strategy(df, strat_config)
+            df_strat, _ = strategy.run_strategy(df,
+                                                strat_config,
+                                                nn_config['strat name'],
+                                                )
             
             # If at least one trade has been made, create the nn features
             if len(df_strat) > 0:
                 
                 # Obtain the time-series of data for each of the features
-                for col in nn_config['price feats'] + nn_config['other feats']:
+                for col in strat_config['price feats'] + strat_config['other feats']:
                     df = time_series_cols(df, col, nn_config['time lags'])
                     
                 # Filter the dataframe to consider the times a trade was made

@@ -277,6 +277,10 @@ def check_params(strat: dict,
     
     if strat['max hold'] > ga_config['max hold']:
         strat['max hold'] = ga_config['max hold']
+    
+    # Check the maximum stop loss criteria
+    if strat['stop'] <= ga_config['max stop']:
+            strat['stop'] = ga_config['max stop']
         
     return strat
 
