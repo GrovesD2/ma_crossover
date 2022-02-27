@@ -1,1 +1,1 @@
-from strats import ma_crossover
+from strats import ma_crossover, boll_band

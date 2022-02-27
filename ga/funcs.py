@@ -330,6 +330,9 @@ def get_random_strat(ga_config: dict) -> dict:
     '''
     if ga_config['strat'] == 'simple ma crossover':
         return strat_lib.ma_crossover.get_random_strat(ga_config)
+    elif ga_config['strat'] == 'simple bollinger band':
+        return strat_lib.boll_band.get_random_strat(ga_config)
+        
 
 def check_params(strat: dict,
                  ga_config: dict) -> dict:
@@ -338,6 +341,8 @@ def check_params(strat: dict,
     '''
     if ga_config['strat'] == 'simple ma crossover':
         return strat_lib.ma_crossover.check_params(strat, ga_config)
+    elif ga_config['strat'] == 'simple bollinger band':
+        return strat_lib.boll_band.check_params(strat, ga_config)
     
 def perturb_strat(strat: dict,
                   ga_config: dict) -> dict:
@@ -346,7 +351,10 @@ def perturb_strat(strat: dict,
     '''
     if ga_config['strat'] == 'simple ma crossover':
         strat = strat_lib.ma_crossover.perturb_strat(strat, ga_config)
-        return check_params(strat, ga_config)
+    elif ga_config['strat'] == 'simple bollinger band':
+        strat = strat_lib.boll_band.perturb_strat(strat, ga_config)
+        
+    return check_params(strat, ga_config)
 
 def check_folder():
     '''

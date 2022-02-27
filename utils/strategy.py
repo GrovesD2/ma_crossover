@@ -32,6 +32,8 @@ def add_strat_cols(df: pandasDF,
     '''
     if strat == 'simple ma crossover':
         return strat_lib.ma_crossover.add_strat_cols(df, config)
+    if strat == 'simple bollinger band':
+        return strat_lib.boll_band.add_strat_cols(df, config)
     
 def run_strategy(df: pandasDF,
                  config: dict,
@@ -57,6 +59,8 @@ def run_strategy(df: pandasDF,
     '''
     if strat == 'simple ma crossover':
         return strat_lib.ma_crossover.run_strategy(df, config)
+    if strat == 'simple bollinger band':
+        return strat_lib.boll_band.run_strategy(df, config)
     
 def summarise_buy_sell(df: pandasDF,
                        percs: list,
