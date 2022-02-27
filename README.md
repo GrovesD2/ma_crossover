@@ -44,7 +44,7 @@ And that's it! The outcome of the optimiser, as well as the results from the in/
 ## The neural network
 The principle idea behind the nn approach is to try and learn the trading set-ups where a specific strategy will work/fail. So rather than predicting price increases, the aim is to use a NN to find patterns where a trading system works. The motivation for this is to emulate a trader learning the environments on where a strategy works or doesn't. **Currently, this is not proving to be a viable route**, better feature engineering may be required, or, the problem may not be tractable at all! Here is the confusion matrix for a bidirectional LSTM network run for 15 epochs.
 
-![dashboard](images/confusion.png)
+![dashboard](images/confusion_matrix.png)
 
 It's learned **something**, but clearly this isn't much better than randomly guessing... If someone smarter than me (not hard) improves this code, please let me know! I believe this may not work because of the following reasons:
 1. **Limited data**: Perhaps a trader considers the general market (e.g. S&P500 as a whole) to make a decision, or perhaps additional confirmation is needed from sentiment analysis.
