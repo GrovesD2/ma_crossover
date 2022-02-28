@@ -34,16 +34,53 @@ def main(nn_config: dict,
     # Get a list of tickers, based on the available data
     ticker_list = tickers.get_random_tickers(nn_config['tickers'])
     
+    # Generate the nn input
+    df = get_nn_input(ticker_list,
+                      nn_config,
+                      strat_config,
+                      )
+    
+    # Drop the profit/loss column, this is required to make the gen_nn_input 
+    # function multi-purpose between training and testing
+    df = df.drop(columns = ['Profit/Loss'])
+
+    # Save the input data into the data-folder
+    df.to_csv('nn/data/' + nn_config['strat name'] + '.csv',
+              index = False)
+    
+    return 
+
+def get_nn_input(tickers: list,
+                 nn_config: dict,
+                 strat_config: dict) -> pandasDF:
+    '''
+    Get the dataframe of all inputs to the nn
+
+    Parameters
+    ----------
+    tickers : list
+        A list of tickers to generate the inputs for
+    nn_config : dict
+        Configuration parameters for the nn
+    strat_config : dict
+        Configuration parameters for the solver
+
+    Returns
+    -------
+    df : pandasDF
+        The processed inputs for the nn
+    '''
+
     # Get the backseries of data for each trade per each ticker
     df = get_time_series_data(nn_config,
                               strat_config,
-                              ticker_list)
+                              tickers)
 
     # Drop the columns we no longer want for the nn
     df = df.drop(columns = (strat_config['price feats']
                             + strat_config['other feats']
                             + strat_config['drop cols']
-                            + ['Profit/Loss']),
+                            ),
                  )
     
     # Normalise the time-series for price related cols, and other features
@@ -51,13 +88,7 @@ def main(nn_config: dict,
     df = normalise_non_price(df, strat_config['other feats'])
     
     # Drop any null entries, to stop any bad-data getting into the nn
-    df = df.dropna()
-
-    # Save the input data into the data-folder
-    df.to_csv('nn/data/' + nn_config['save name'] + '.csv',
-              index = False)
-    
-    return 
+    return df.dropna()
 
 def normalise_prices(df: pandasDF,
                      price_cols: list):

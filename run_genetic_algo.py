@@ -7,11 +7,11 @@ if __name__ == "__main__":
                  # Can use:
                  # - simple bollinger band
                  # - simple ma crossover
-                 'strat': 'simple bollinger band',
+                 'strat': 'simple ma crossover',
         
                  # Basic controls for the genetic algo
-                 'num strats': 100, # Number of strategies to try on each evolution
-                 'num tickers': 10, # Number of tickers to optimise over
+                 'num strats': 60, # Number of strategies to try on each evolution
+                 'num tickers': 15, # Number of tickers to optimise over
                  'num evolutions': 50, # Number of evolutions to perform
                  'keep perc': 0.2, # Percentage of top models to keep on each evolution
                  
@@ -26,7 +26,7 @@ if __name__ == "__main__":
                  
                  # Out of sample testing and saving name
                  'num tickers test': 200, # Number of tickers to perform the out of sample testing
-                 'save name': 'profit_boll_short', # Save name for the optimised params
+                 'save name': 'profit_ma_short', # Save name for the optimised params
                  }
 
     # Run the algorithm
