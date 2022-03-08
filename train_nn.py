@@ -13,9 +13,9 @@ if __name__ == "__main__":
                  'train perc': 0.8, # Train/test split
                  'model type': 'vanilla', # Option to chose 'vanilla', 'lstm', or 'bidirectional'
                  'classes': 4, 
-                 'nodes': 1024, # Number of nodes in layer 1
-                 'dropout perc': 0.2, # Dropout percentage of any dropout layers
-                 'epochs': 10, 
+                 'nodes': 256, # Number of nodes in layer 1
+                 'dropout perc': 0.4, # Dropout percentage of any dropout layers
+                 'epochs': 25, 
                  'batch size': 4, 
                  'learn rate': 1e-3,
                  'decay rate': 1e-4,
@@ -25,11 +25,11 @@ if __name__ == "__main__":
                  'num tickers test': 100,
                  
                  # Minimum class level to use in the testing
-                 'min class': 2,
+                 'min class': 3,
                  
                  # Surety level threshold for the testing. The NN will not
                  # consider any predictions where it is less than x% sure
-                 'surety': 0.45,
+                 'surety': 0.5,
                  }
     
     # Train the nn model

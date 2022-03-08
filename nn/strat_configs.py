@@ -27,7 +27,7 @@ def get_config(strat: str) -> dict:
                 
                 'price feats': ['Open', 'Low', 'High', 'Close', 'fast_ma', 'slow_ma'],
                 'other feats': ['Volume'],
-                'drop cols': ['Date', 'Adj Close']
+                'drop cols': ['Adj Close']
                 }
     
     elif strat == 'simple bollinger band':
@@ -44,5 +44,5 @@ def get_config(strat: str) -> dict:
                 
                 'price feats': ['Open', 'Low', 'High', 'Close', 'boll_lower'],
                 'other feats': ['Volume'],
-                'drop cols': ['Date', 'Adj Close']
+                'drop cols': ['Adj Close']
                 }

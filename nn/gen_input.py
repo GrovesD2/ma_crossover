@@ -87,9 +87,48 @@ def get_nn_input(tickers: list,
     df = normalise_prices(df, strat_config['price feats'])
     df = normalise_non_price(df, strat_config['other feats'])
     
+    # Get the spy index as a feature
+    df = single_stock_data('SPY', nn_config).merge(df,
+                                                   on = 'Date',
+                                                   how = 'right',
+                                                   )
+    
     # Drop any null entries, to stop any bad-data getting into the nn
-    return df.dropna()
+    return df.dropna().drop(columns = ['Date'])
 
+def single_stock_data(ticker: str,
+                      nn_config: dict) -> pandasDF:
+    '''
+    Get a single stock's time-series history as a nn feature. I.e. one could
+    use the spy as a feature to the NN.
+
+    Parameters
+    ----------
+    ticker : str
+        The ticker to get the time-series data for
+    nn_config : dict
+        The config params for the nn.
+
+    Returns
+    -------
+    df : pandasDF
+        The time series data for a single ticker.
+    '''
+    
+    df = pd.read_csv(f'data/{ticker}.csv')
+
+    # Add the time-series columns, and then normalise them
+    for col in ['Open', 'Low', 'High', 'Close', 'Volume']:
+        df = time_series_cols(df, col, nn_config['time lags'])
+    
+    df = normalise_prices(df, ['Open', 'Low', 'High', 'Close'])
+    df = normalise_non_price(df, ['Volume'])
+    
+    # Drop the unncessary columns when returning    
+    return df.drop(columns = ['Open', 'Low', 'High', 'Close', 'Volume',
+                              'Adj Close']
+                   )
+    
 def normalise_prices(df: pandasDF,
                      price_cols: list):
     '''
@@ -106,7 +145,7 @@ def normalise_prices(df: pandasDF,
 def normalise_non_price(df: pandasDF,
                         other_feats: list):
     '''
-    For each non-price related time-series, normalise on a 0-1 scale
+    For each non-price related time-series, normalise them
     '''
     for feat in other_feats:
         cols = get_lagged_col_names(df, feat)
@@ -124,9 +163,9 @@ def get_lagged_col_names(df: pandasDF,
 def normalise_time_series(df: pandasDF,
                           cols: list) -> pandasDF:
     '''
-    For a set of columns normalise those rows in the 0-1 range.
+    For a set of columns normalise by using a standard scaling approach
     '''
-    df[cols] = df[cols].apply(lambda x: (x-x.min())/(x.max()-x.min()),
+    df[cols] = df[cols].apply(lambda x: (x-x.mean())/x.std(),
                               axis = 1,
                               )
     return df
