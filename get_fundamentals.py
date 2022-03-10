@@ -49,7 +49,6 @@ def fundamental_download_case(case: int,
         quarterly_CF[0].to_csv(f'data/{ticker}_quarterly_CF.csv', index = False)
         
     return
-        
 
 def get_historical_fundamentals(ticker_list: list,
                                 api_key: str):
@@ -72,7 +71,8 @@ def get_historical_fundamentals(ticker_list: list,
     -----
     On a free API key, only 500 calls per day are allowed. Given that this
     function downloads 6 different statements, a maximum of 83 tickers can be
-    considered.
+    considered. Likewise, only 5 API calls can be made per minute, so a sleep
+    step is included at every 5 downloads.
     '''
     
     fd = FundamentalData(api_key,
@@ -83,10 +83,15 @@ def get_historical_fundamentals(ticker_list: list,
     
     for ticker in ticker_list:
         
+        # Looping over each download case, for both annual and quarterly we have:
+        # - IS = Income Statement
+        # - BS = Balance Sheet
+        # - CF = Cash Flow
         for case in range(0, 6):
             fundamental_download_case(case, ticker, fd)
             download += 1
             
+            # This step ensures the 5 API calls per minute are not exceeded
             if download%5 == 0:
                 time.sleep(60)
         

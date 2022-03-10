@@ -2,6 +2,8 @@
 
 A simple repo of python tools to develop and optimise basic trading strategies (no $1m ideas here sorry!). This has mainly been used to develop my understanding into trading methods, and gain more experience with machine learning techniqes (ANNs and genetic algorithms).
 
+**This branch is investigating adding fundamental data to the Neural Network to enhance its predictive power**
+
 This repo includes:
 - A dashboard to run a moving average crossover strategy (given a ticker + parameters), view the strategy stats, and plot the candlestick charts for the trades made.
 - A neural network to try and learn when a strategy will work/fail (this avenue does not appear too promising)
