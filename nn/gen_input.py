@@ -200,6 +200,7 @@ def get_time_series_data(nn_config: dict,
     # For each ticker in the ticker list, run the buy/sell and pre-process
     # the data for input into the nn
     for ticker in ticker_list:
+        
         df = pd.read_csv(f'data/{ticker}.csv')
         df = strategy.add_strat_cols(df,
                                      strat_config,

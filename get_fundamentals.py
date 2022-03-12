@@ -79,27 +79,35 @@ def get_historical_fundamentals(ticker_list: list,
                          output_format = 'pandas',
                          )
     download = 0
-    print('Downloading the fundamentals')
+    incomplete_downloads = []
+    print('Downloading the fundamental stock data.\n\nTickers completed:')
     
-    for ticker in ticker_list:
+    try:
+        for ticker in ticker_list:
+            # Looping over each download case, for both annual and quarterly we have:
+            # - IS = Income Statement
+            # - BS = Balance Sheet
+            # - CF = Cash Flow
+            for case in range(0, 6):
+                fundamental_download_case(case, ticker, fd)
+                download += 1
+                
+                # This step ensures the 5 API calls per minute are not exceeded
+                if download%5 == 0:
+                    time.sleep(65)
         
-        # Looping over each download case, for both annual and quarterly we have:
-        # - IS = Income Statement
-        # - BS = Balance Sheet
-        # - CF = Cash Flow
-        for case in range(0, 6):
-            fundamental_download_case(case, ticker, fd)
-            download += 1
+            print(ticker)
             
-            # This step ensures the 5 API calls per minute are not exceeded
-            if download%5 == 0:
-                time.sleep(60)
-        
-        print('Completed: ', ticker)
+    except:
+        incomplete_downloads.append(ticker)
+        print(f'{ticker} - failed download')
+        time.sleep(65)
+        download = 0
 
-    return
+    return incomplete_downloads
 
 api_key = 'MU3I3DR1WXM7WRV6'
 ticker_list = tickers.get_tickers('spy')
 
-get_historical_fundamentals(ticker_list[3:15], api_key)
+incomplete_downloads = get_historical_fundamentals(ticker_list[105:188],
+                                                   api_key)

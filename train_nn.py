@@ -7,8 +7,8 @@ from nn import model, testing
 if __name__ == "__main__":  
 
     # Configuration settings for the Neural Network
-    nn_config = {'strat name': 'simple bollinger band', # Name of the strategy
-                 'model save name': 'simple bb',
+    nn_config = {'strat name': 'simple ma crossover', # Name of the strategy
+                 'model save name': 'simple ma',
                  'time lags': range(1, 26), # Which days back to include in the nn features
                  'train perc': 0.8, # Train/test split
                  'model type': 'vanilla', # Option to chose 'vanilla', 'lstm', or 'bidirectional'

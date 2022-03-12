@@ -130,7 +130,7 @@ def get_nn_data(nn_config: dict) -> dict:
     # Load in the data and drop columns not required for the nn
     df = pd.read_csv('nn/data/' + nn_config['strat name'] + '.csv')
     df = df.drop(columns = ['ticker']).dropna()
-    
+
     # Check if equal examples of each class is wanted
     df = equalise_classes(df)
 

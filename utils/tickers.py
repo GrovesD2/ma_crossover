@@ -26,7 +26,8 @@ def get_all_ticker_names():
     '''
     Get a list of all ticker names in the data-directory.
     '''
-    return [s.split('.csv')[0] for s in os.listdir('data/') if '.csv' in s]
+    return [s.split('.csv')[0].split('_')[0]
+            for s in os.listdir('data/') if '.csv' in s]
 
 def check_run(download_type: str):
     '''
