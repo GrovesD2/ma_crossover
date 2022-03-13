@@ -88,16 +88,16 @@ def get_testing_data(tickers: list,
                                 )
     
     # Reset the index of the dataframe to remove the set with copy warning
-    df = df.reset_index().drop(columns = 'index')
+    df = df.reset_index().drop(columns = ['index', 'ticker'])
     
     # Change the df to values, and reshape if an LSTM-type network has been used
-    data = df.values[:, :-3]
+    data = df.values[:, :-2]
     if config['model type'] in ['lstm', 'bidirectional']:
         data = model.reshape_rnn(data,
                                  max(config['time lags']),
                                  )
     
-    return df[['ticker', 'Profit/Loss', 'labels']], data
+    return df[['Profit/Loss', 'labels']], data
 
 def get_stats(df: pandasDF,
               config: dict):

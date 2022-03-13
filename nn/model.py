@@ -130,7 +130,7 @@ def get_nn_data(nn_config: dict) -> dict:
     # Load in the data and drop columns not required for the nn
     df = pd.read_csv('nn/data/' + nn_config['strat name'] + '.csv')
     df = df.drop(columns = ['ticker']).dropna()
-
+    
     # Check if equal examples of each class is wanted
     df = equalise_classes(df)
 
@@ -143,12 +143,12 @@ def get_nn_data(nn_config: dict) -> dict:
     
     nn_data['train'] = data[0:split, :]
     nn_data['x train'] = nn_data['train'][:, 0:-1].astype(np.float32)
-    nn_data['y train'] = to_categorical(nn_data['train'][:, -1],
+    nn_data['y train'] = to_categorical(nn_data['train'][:, -1].astype(int),
                                         nn_config['classes'])
     
     nn_data['test'] = data[split:, :]
     nn_data['x test'] = nn_data['test'][:, 0:-1].astype(np.float32)
-    nn_data['y test'] = to_categorical(nn_data['test'][:, -1],
+    nn_data['y test'] = to_categorical(nn_data['test'][:, -1].astype(int),
                                        nn_config['classes'])
     
     # A 3D array is required for the lstm input, so we reshape to accomodate

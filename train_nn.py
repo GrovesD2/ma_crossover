@@ -15,9 +15,9 @@ if __name__ == "__main__":
                  'classes': 4, 
                  'nodes': 256, # Number of nodes in layer 1
                  'dropout perc': 0.4, # Dropout percentage of any dropout layers
-                 'epochs': 25, 
-                 'batch size': 4, 
-                 'learn rate': 1e-3,
+                 'epochs': 50, 
+                 'batch size': 2, 
+                 'learn rate': 1e-4,
                  'decay rate': 1e-4,
                  'validation split': 0.1,
                  
@@ -25,11 +25,13 @@ if __name__ == "__main__":
                  'num tickers test': 100,
                  
                  # Minimum class level to use in the testing
-                 'min class': 3,
+                 'min class': 2,
                  
                  # Surety level threshold for the testing. The NN will not
                  # consider any predictions where it is less than x% sure
-                 'surety': 0.5,
+                 'surety': 0.6,
+                 
+                 'include fundamentals': True,
                  }
     
     # Train the nn model

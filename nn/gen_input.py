@@ -6,9 +6,10 @@ import os
 import numba as nb
 import pandas as pd
 
-from utils import tickers
-from utils import strategy
+# Project imports
+from utils import tickers, strategy, dates, fundamentals
 
+# Other imports and type-hinting
 from pandas import DataFrame as pandasDF
 
 def main(nn_config: dict,
@@ -93,8 +94,41 @@ def get_nn_input(tickers: list,
                                                    how = 'right',
                                                    )
     
+    if nn_config['include fundamentals']:
+        df = include_fundamentals(df)
+        
+        # Drop the fiscal quarter column since it is no longer required
+        df = df.drop(columns = 'fiscal_quarter')
+        
+        # Rearrange the columns such that ticker, Profit/Loss and labels appear
+        # at the end, this is helpful for sorting the data in the nn code
+        cols = [col for col in df.columns.tolist() 
+                if col not in ['Profit/Loss', 'labels', 'ticker']]
+        df = df[cols + ['Profit/Loss', 'labels', 'ticker']]
+    
     # Drop any null entries, to stop any bad-data getting into the nn
     return df.dropna().drop(columns = ['Date'])
+
+def include_fundamentals(df: pandasDF):
+    
+    dfs = []
+    
+    for ticker in df['ticker'].unique():
+        
+        df_tmp = df[df['ticker'] == ticker]
+        try:
+            fund = fundamentals.get_all_fundamentals(ticker)
+            df_tmp = dates.backwards_date_merge(df_tmp,
+                                                fund,
+                                                'Date',
+                                                'fiscal_quarter',
+                                                'date')
+            dfs.append(df_tmp)
+        except Exception as e:
+            print(ticker, ' : ', e)
+            
+    return pd.concat(dfs)
+            
 
 def single_stock_data(ticker: str,
                       nn_config: dict) -> pandasDF:
@@ -190,9 +224,8 @@ def get_time_series_data(nn_config: dict,
 
     Returns
     -------
-    df : pandasDF
-        The dataframe of all trades made, with the back-series of data for 
-        each feature.
+    dfs : list
+        A dataframe containing all trades
     '''    
     # Open an empty list to store the processed dataframes per each ticker
     dfs = []
@@ -207,8 +240,12 @@ def get_time_series_data(nn_config: dict,
                                      nn_config['strat name'],
                                      )
         
-        # Sometimes the data included is too small to calculate rolling averages,
-        # this next line of code removes that.
+        # Since we only have fundamental data since 2017, there is no point
+        # searching for training data beyond that
+        if nn_config['include fundamentals']:
+            df = df[df['Date'] >= '2017-01-01']
+            
+            
         if len(df) > 0:
             df_strat, _ = strategy.run_strategy(df,
                                                 strat_config,
@@ -234,7 +271,6 @@ def get_time_series_data(nn_config: dict,
                 df['ticker'] = ticker
                 dfs.append(df)
                 
-    # Concatenate the dfs into one larger df
     return pd.concat(dfs)
                              
 def get_trades(df: pandasDF,

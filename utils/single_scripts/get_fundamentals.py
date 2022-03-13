@@ -109,7 +109,6 @@ def get_historical_fundamentals(ticker_list: list,
 api_key = 'MU3I3DR1WXM7WRV6'
 ticker_list = tickers.get_tickers('spy')
 
-
 ticker_list = ticker_list[188:191] + ticker_list[357:437]
 
 incomplete_downloads = get_historical_fundamentals(ticker_list,
