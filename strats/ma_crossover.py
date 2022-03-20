@@ -36,7 +36,8 @@ def add_ma_col(df: pandasDF,
     '''
     
     if mean_type == 'exp':
-        df[f'{speed}_ma'] = df[price_field].ewm(avg_days).mean()
+        df[f'{speed}_ma'] = df[price_field].ewm(span = avg_days,
+                                                adjust = False).mean()
     else:
         df[f'{speed}_ma'] = df[price_field].rolling(avg_days).mean()
     

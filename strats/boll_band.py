@@ -8,17 +8,6 @@ import numpy as np
 from numpy import array as np_arr
 from pandas import DataFrame as pandasDF
 
-def buy_signal(close: np_arr,
-               band: np_arr) -> int:
-    '''
-    Check for a buy signal, return 1 if the buy signal is reached, otherwise 0
-    '''
-    
-    if close[-1] <= band[-1]:
-        return 1
-    else:
-        return 0
-
 def add_boll_col(df: pandasDF,
                  col_name: str,
                  mean_price_field: str,

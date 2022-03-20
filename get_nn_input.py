@@ -6,9 +6,10 @@ from nn import gen_input, strat_configs
 if __name__ == "__main__":
 
     # Configuration settings for the NN data
-    nn_config = {'strat name': 'simple bollinger band',
-                 'include fundamentals': True,
-                 'tickers': 400, # How many tickers used to train the nn
+    nn_config = {'strat name': 'simple ma crossover',
+                 'include fundamentals': False,
+                 'tickers': 300, # How many tickers used to train the nn
+                 'date filter': '2010-01-01', # Earliest date to consider in the training
                  'time lags': range(1, 26), # Which days back to include in the nn features
                  }
 

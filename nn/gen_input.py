@@ -75,7 +75,9 @@ def get_nn_input(tickers: list,
     # Get the backseries of data for each trade per each ticker
     df = get_time_series_data(nn_config,
                               strat_config,
-                              tickers)
+                              tickers,
+                              nn_config['date filter'],
+                              )
 
     # Drop the columns we no longer want for the nn
     df = df.drop(columns = (strat_config['price feats']
@@ -206,7 +208,8 @@ def normalise_time_series(df: pandasDF,
 
 def get_time_series_data(nn_config: dict,
                          strat_config: dict,
-                         ticker_list: list) -> pandasDF:
+                         ticker_list: list,
+                         date_filter: str) -> pandasDF:
     '''
     Produce a dataframe containing the time-series data for a random selection
     of tickers. The output df contains the backseries of data for each trade
@@ -221,6 +224,8 @@ def get_time_series_data(nn_config: dict,
     ticker_list : list
         A list of tickers to run the buy/sell for, and produce input data for
         the nn
+    date_filter : str
+        The earliest date to consider across all stocks for training
 
     Returns
     -------
@@ -245,7 +250,7 @@ def get_time_series_data(nn_config: dict,
         if nn_config['include fundamentals']:
             df = df[df['Date'] >= '2017-01-01']
         else:
-            df = df[df['Date'] >= '2010-01-01']
+            df = df[df['Date'] >= date_filter]
         
         if len(df) > 0:
             df_strat, _ = strategy.run_strategy(df,
