@@ -51,7 +51,7 @@ def load_fundamental_data(ticker: str,
     df = df.drop(columns = 'reportedCurrency')
     df[df.columns[1:]] = df[df.columns[1:]].apply(pd.to_numeric)
     
-    # Sort the date the correct way to return
+    # Sort the date to keep consistent between tickers
     return df.sort_values('fiscalDateEnding', ascending = False)
 
 def get_f_score_df(df: pandasDF) -> pandasDF:
@@ -237,5 +237,3 @@ def get_all_fundamentals(ticker: str) -> pandasDF:
         fund = fund[(fund[col] < 50) & (fund[col] > -50)]
     
     return fund
-    
-#df = get_all_fundamentals('ABBV')

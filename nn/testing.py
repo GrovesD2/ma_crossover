@@ -88,7 +88,7 @@ def get_testing_data(tickers: list,
                                 )
     
     # Reset the index of the dataframe to remove the set with copy warning
-    df = df.reset_index().drop(columns = ['index', 'ticker'])
+    df = df.reset_index().drop(columns = ['index', 'ticker', 'Date'])
     
     # Change the df to values, and reshape if an LSTM-type network has been used
     data = df.values[:, :-2]

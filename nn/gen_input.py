@@ -91,7 +91,7 @@ def get_nn_input(tickers: list,
     # Get the spy index as a feature
     df = single_stock_data('SPY', nn_config).merge(df,
                                                    on = 'Date',
-                                                   how = 'right',
+                                                   how = 'inner',
                                                    )
     
     if nn_config['include fundamentals']:
@@ -107,7 +107,7 @@ def get_nn_input(tickers: list,
         df = df[cols + ['Profit/Loss', 'labels', 'ticker']]
     
     # Drop any null entries, to stop any bad-data getting into the nn
-    return df.dropna().drop(columns = ['Date'])
+    return df.dropna()
 
 def include_fundamentals(df: pandasDF):
     
@@ -199,7 +199,7 @@ def normalise_time_series(df: pandasDF,
     '''
     For a set of columns normalise by using a standard scaling approach
     '''
-    df[cols] = df[cols].apply(lambda x: (x-x.mean())/x.std(),
+    df[cols] = df[cols].apply(lambda x: (x-x.mean())/x.std(ddof = 0),
                               axis = 1,
                               )
     return df
@@ -229,7 +229,7 @@ def get_time_series_data(nn_config: dict,
     '''    
     # Open an empty list to store the processed dataframes per each ticker
     dfs = []
-    
+
     # For each ticker in the ticker list, run the buy/sell and pre-process
     # the data for input into the nn
     for ticker in ticker_list:
@@ -244,8 +244,9 @@ def get_time_series_data(nn_config: dict,
         # searching for training data beyond that
         if nn_config['include fundamentals']:
             df = df[df['Date'] >= '2017-01-01']
-            
-            
+        else:
+            df = df[df['Date'] >= '2010-01-01']
+        
         if len(df) > 0:
             df_strat, _ = strategy.run_strategy(df,
                                                 strat_config,
@@ -270,7 +271,7 @@ def get_time_series_data(nn_config: dict,
                 # Add the identifier for this data, and include it on the list
                 df['ticker'] = ticker
                 dfs.append(df)
-                
+
     return pd.concat(dfs)
                              
 def get_trades(df: pandasDF,
