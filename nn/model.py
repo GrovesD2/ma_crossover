@@ -85,12 +85,14 @@ def equalise_classes(df: pandasDF) -> pandasDF:
     '''
     
     # Find how many there are of each class
-    num_each_class = df['labels'].value_counts().values
+    counts = df['labels'].value_counts()
+    labels = counts.index.values
+    num_each_class = counts.values
     
     # Print the summary
     print('Number of examples for each class: ')
     for n in range(0, len(num_each_class)):
-        print('Class ' + str(n) + ': ' + str(num_each_class[n]))
+        print('Class ' + str(labels[n]) + ': ' + str(num_each_class[n]))
     print('\nDo you wish to equalise the classes? (y/n)')
   
     opt = input()

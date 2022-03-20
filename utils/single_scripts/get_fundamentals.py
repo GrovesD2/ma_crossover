@@ -26,27 +26,27 @@ def fundamental_download_case(case: int,
     
     if case == 0:
         annual_IS = fd.get_income_statement_annual(ticker)
-        annual_IS[0].to_csv(f'data/{ticker}_annual_IS.csv', index = False)
+        annual_IS[0].to_csv(f'../../data/{ticker}_annual_IS.csv', index = False)
         
     elif case == 1:
         annual_BS = fd.get_balance_sheet_annual(ticker)
-        annual_BS[0].to_csv(f'data/{ticker}_annual_BS.csv', index = False)
+        annual_BS[0].to_csv(f'../../data/{ticker}_annual_BS.csv', index = False)
         
     elif case == 2:
         annual_CF = fd.get_cash_flow_annual(ticker)
-        annual_CF[0].to_csv(f'data/{ticker}_annual_CF.csv', index = False)
+        annual_CF[0].to_csv(f'../../data/{ticker}_annual_CF.csv', index = False)
         
     if case == 3:
         quarterly_IS = fd.get_income_statement_quarterly(ticker)
-        quarterly_IS[0].to_csv(f'data/{ticker}_quarterly_IS.csv', index = False)
+        quarterly_IS[0].to_csv(f'../../data/{ticker}_quarterly_IS.csv', index = False)
         
     elif case == 4:
         quarterly_BS = fd.get_balance_sheet_quarterly(ticker)
-        quarterly_BS[0].to_csv(f'data/{ticker}_quarterly_BS.csv', index = False)
+        quarterly_BS[0].to_csv(f'../../data/{ticker}_quarterly_BS.csv', index = False)
         
     elif case == 5:
         quarterly_CF = fd.get_cash_flow_quarterly(ticker)
-        quarterly_CF[0].to_csv(f'data/{ticker}_quarterly_CF.csv', index = False)
+        quarterly_CF[0].to_csv(f'../../data/{ticker}_quarterly_CF.csv', index = False)
         
     return
 
@@ -107,9 +107,8 @@ def get_historical_fundamentals(ticker_list: list,
     return incomplete_downloads
 
 api_key = 'MU3I3DR1WXM7WRV6'
-ticker_list = tickers.get_tickers('spy')
 
-ticker_list = ticker_list[188:191] + ticker_list[357:437]
+ticker_list = 'INCLUDE!'
 
 incomplete_downloads = get_historical_fundamentals(ticker_list,
                                                    api_key)

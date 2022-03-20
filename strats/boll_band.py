@@ -56,12 +56,12 @@ def add_boll_col(df: pandasDF,
         The price data with a bollinger band column added
     '''
     if mean_type == 'exp':
-        mean = df[mean_price_field].ewm(mean_days).mean()
+        mean = df[mean_price_field].ewm(span = mean_days, adjust = False).mean()
     else:
         mean = df[mean_price_field].rolling(mean_days).mean()
 
     if std_type == 'exp':
-        std = df[std_price_field].ewm(std_days).std()
+        std = df[std_price_field].ewm(span = std_days, adjust = False).std()
     else:
         std = df[std_price_field].rolling(std_days).std()
         

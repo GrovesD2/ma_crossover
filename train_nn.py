@@ -22,7 +22,7 @@ if __name__ == "__main__":
                  'validation split': 0.1,
                  
                  # Number of tickers to perform the out of sample test on
-                 'num tickers test': 100,
+                 'num tickers test': 10,
                  
                  # Minimum class level to use in the testing
                  'min class': 3,
@@ -31,7 +31,7 @@ if __name__ == "__main__":
                  # consider any predictions where it is less than x% sure
                  'surety': 0.6,
                  
-                 'include fundamentals': False,
+                 'include fundamentals': True,
                  }
     
     # Train the nn model
