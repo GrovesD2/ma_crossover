@@ -7,9 +7,14 @@ if __name__ == "__main__":
 
     # Configuration settings for the NN data
     nn_config = {'strat name': 'simple ma crossover',
-                 'include fundamentals': False,
-                 'tickers': 300, # How many tickers used to train the nn
-                 'date filter': '2010-01-01', # Earliest date to consider in the training
+                 'include fundamentals': True,
+                 'tickers': 400, # How many tickers worth of data to use
+                 
+                 # Earliest date to consider in the training, this only applies
+                 # for when fundamentals are not used
+                 'date filter': '2010-01-01', 
+                 
+                 # The days back in time to include as features in the NN
                  'time lags': range(1, 26), # Which days back to include in the nn features
                  }
 

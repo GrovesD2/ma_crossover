@@ -7,7 +7,7 @@ import numba as nb
 import pandas as pd
 
 # Project imports
-from utils import tickers, strategy, dates, fundamentals
+from utils import tickers, strategy, dates, fundamentals, io
 
 # Other imports and type-hinting
 from pandas import DataFrame as pandasDF
@@ -47,9 +47,14 @@ def main(nn_config: dict,
 
     # Save the input data into the data-folder
     df.to_csv('nn/data/' + nn_config['strat name'] + '.csv',
-              index = False)
+              index = False,
+              )
     
-    return 
+    # Save the configuration settings as a json file
+    io.save_dict(nn_config,
+                 'nn/data/' + nn_config['strat name'],
+                 )
+    return     
 
 def get_nn_input(tickers: list,
                  nn_config: dict,

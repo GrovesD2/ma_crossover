@@ -1,9 +1,14 @@
 import numpy as np
 import pandas as pd
 
+# Project imports
+from utils import io
+
+# Type-hinting imports
 from numpy import array as np_arr
 from pandas import DataFrame as pandasDF
 
+# NN imports
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.utils import to_categorical
@@ -24,6 +29,9 @@ def main(nn_config: dict):
     -------
     None
     '''
+    
+    # Adjust the config file with the saved settings from the data generation
+    nn_config = add_gen_config(nn_config)
     
     data = get_nn_data(nn_config)
     model = get_model(nn_config, data)
@@ -65,6 +73,31 @@ def main(nn_config: dict):
     disp.plot()
     
     return 
+
+def add_gen_config(nn_config: dict) -> dict:
+    '''
+    Add the params from the config settings used to generate the NN train data
+
+    Parameters
+    ----------
+    nn_config : dict
+        The config used to train the NN.
+
+    Returns
+    -------
+    nn_config : dict
+        The config with the generation settings
+    '''
+    
+    # Load the config used to generate the generate the NN data
+    gen_config = io.load_dict('nn/data/' + nn_config['strat name'])
+    
+    # Add the configs to the NN config
+    nn_config['include fundamentals'] = gen_config['include fundamentals']
+    nn_config['date filter'] = gen_config['date filter']
+    nn_config['time lags'] = gen_config['time lags']
+    
+    return nn_config
 
 def equalise_classes(df: pandasDF) -> pandasDF:
     '''
@@ -156,12 +189,16 @@ def get_nn_data(nn_config: dict) -> dict:
     
     # A 3D array is required for the lstm input, so we reshape to accomodate
     if nn_config['model type'] in ['lstm', 'bidirectional']:
-        nn_data['x train'] = reshape_rnn(nn_data['x train'],
-                                         max(nn_config['time lags']),
-                                         )
-        nn_data['x test'] = reshape_rnn(nn_data['x test'],
-                                        max(nn_config['time lags']),
-                                        )
+        if nn_config['include fundamentals']:
+            print('RNN-type models are currently not supported with the ' + 
+                  'fundamental data included, using the vanilla network.')
+        else:
+            nn_data['x train'] = reshape_rnn(nn_data['x train'],
+                                             max(nn_config['time lags']),
+                                             )
+            nn_data['x test'] = reshape_rnn(nn_data['x test'],
+                                            max(nn_config['time lags']),
+                                            )
     return nn_data
 
 def reshape_rnn(x: np_arr,
@@ -214,7 +251,14 @@ def get_model(nn_config: dict,
         The model architecture for training
     '''
     
-    if nn_config['model type'] == 'vanilla':
+    # RNN type nets are not supported with the fundamentals included (since
+    # they are not time-series)
+    if nn_config['include fundamentals']:
+        nn_type = 'vanilla'
+    else:
+        nn_type = nn_config['model type']
+    
+    if nn_type == 'vanilla':
         model = Sequential([
             Dense(nn_config['nodes'],
                   activation = 'relu',
@@ -227,7 +271,7 @@ def get_model(nn_config: dict,
             Dense(nn_config['classes'], activation = 'softmax')
             ])
         
-    elif nn_config['model type'] == 'lstm':
+    elif nn_type == 'lstm':
         model = Sequential([
             LSTM(nn_config['nodes'],
                  input_shape = (nn_data['x train'].shape[1],
@@ -239,7 +283,7 @@ def get_model(nn_config: dict,
             Dense(nn_config['classes'], activation = 'softmax'),
             ])
         
-    elif nn_config['model type'] == 'bidirectional':
+    elif nn_type == 'bidirectional':
         model = Sequential([
             Bidirectional(LSTM(nn_config['nodes'],
                                input_shape = (nn_data['x train'].shape[1],

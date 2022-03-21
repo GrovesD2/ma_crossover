@@ -9,7 +9,8 @@ if __name__ == "__main__":
     # Configuration settings for the Neural Network
     nn_config = {'strat name': 'simple ma crossover', # Name of the strategy
                  'model save name': 'simple ma',
-                 'time lags': range(1, 26), # Which days back to include in the nn features
+                 
+                 # NN specific configs
                  'train perc': 0.8, # Train/test split
                  'model type': 'vanilla', # Option to chose 'vanilla', 'lstm', or 'bidirectional'
                  'classes': 4, 
@@ -30,8 +31,6 @@ if __name__ == "__main__":
                  # Surety level threshold for the testing. The NN will not
                  # consider any predictions where it is less than x% sure
                  'surety': 0.6,
-                 
-                 'include fundamentals': False,
                  }
     
     # Train the nn model
