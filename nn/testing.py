@@ -27,6 +27,9 @@ def main(config):
     None
     '''
     
+    # Adjust the config file with the saved settings from the data generation
+    config = model.add_gen_config(config)
+    
     # Get the strategy config for what the nn was trained on
     strat_config = strat_configs.get_config(config['strat name'])
     

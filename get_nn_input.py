@@ -6,7 +6,7 @@ from nn import gen_input, strat_configs
 if __name__ == "__main__":
 
     # Configuration settings for the NN data
-    nn_config = {'strat name': 'simple ma crossover',
+    nn_config = {'strat name': 'simple bollinger band',
                  'include fundamentals': True,
                  'tickers': 400, # How many tickers worth of data to use
                  

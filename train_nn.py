@@ -7,8 +7,8 @@ from nn import model, testing
 if __name__ == "__main__":  
 
     # Configuration settings for the Neural Network
-    nn_config = {'strat name': 'simple ma crossover', # Name of the strategy
-                 'model save name': 'simple ma',
+    nn_config = {'strat name': 'simple bollinger band', # Name of the strategy
+                 'model save name': 'simple bb',
                  
                  # NN specific configs
                  'train perc': 0.8, # Train/test split
@@ -16,7 +16,7 @@ if __name__ == "__main__":
                  'classes': 4, 
                  'nodes': 256, # Number of nodes in layer 1
                  'dropout perc': 0.4, # Dropout percentage of any dropout layers
-                 'epochs': 40, 
+                 'epochs': 25, 
                  'batch size': 4, 
                  'learn rate': 1e-4,
                  'decay rate': 1e-4,

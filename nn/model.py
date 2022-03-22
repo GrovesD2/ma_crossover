@@ -14,6 +14,7 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.utils import to_categorical
 from tensorflow.keras.layers import Dense, LSTM, Bidirectional, Dropout
 
+from matplotlib import pyplot as plt
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 
 def main(nn_config: dict):
@@ -71,6 +72,7 @@ def main(nn_config: dict):
     cm_scaled = cm/cm.astype(np.float).sum(axis = 0)
     disp = ConfusionMatrixDisplay(confusion_matrix = cm_scaled)
     disp.plot()
+    plt.savefig('nn/models/' + nn_config['model save name'] + '.png')
     
     return 
 
