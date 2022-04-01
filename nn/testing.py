@@ -8,8 +8,7 @@ from numpy import array as np_arr
 from pandas import DataFrame as pandasDF
 
 # Project imports
-from utils import tickers
-from nn import gen_input, strat_configs, model
+from nn import strat_configs, model, utils
     
 def main(config):
     '''
@@ -28,25 +27,15 @@ def main(config):
     '''
     
     # Adjust the config file with the saved settings from the data generation
-    config = model.add_gen_config(config)
+    config = utils.add_gen_config(config)
     
     # Get the strategy config for what the nn was trained on
     strat_config = strat_configs.get_config(config['strat name'])
     
-    # Load in the training dataset to see which tickers it was trained on
-    df = pd.read_csv('nn/data/' + config['strat name'] + '.csv')
-    ticker_train = df['ticker'].unique().tolist()
-    
-    # Get tickers to perform the out of sample testing
-    out_sample_tickers = tickers.get_tickers_exc_sample(config['num tickers test'],
-                                                        ticker_train,
-                                                        )
-    
     # Get the testing data
-    df_test, data = get_testing_data(out_sample_tickers,
-                                     config,
-                                     strat_config,
-                                     )
+    df_test, data, true_labels = get_testing_data(config,
+                                                  strat_config,
+                                                  )
     
     # Load in the nn model for the predictions
     nn_model = load_model('nn/models/' + config['model save name'])
@@ -58,19 +47,27 @@ def main(config):
     # Make a new df to signify the return
     df_test['predicted'] = labels
     df_test['surety'] = predict[np.arange(0, labels.shape[0]), labels]
+    
+    # Save the testing to a csv file so that future MC trials can be performed
+    df_test.to_csv('nn/data/' + config['strat name'] + ' out sample test.csv',
+                   index = False)
+    
+    # Plot the confusion matrix
+    utils.get_confusion_matrix(true_labels,
+                               labels,
+                               config,
+                               'Out of sample test'
+                               )
 
     return get_stats(df_test, config)
-
-def get_testing_data(tickers: list,
-                     config: dict,
-                     strat_config: dict) -> Tuple[pandasDF, np_arr]:
+    
+def get_testing_data(config: dict,
+                     strat_config: dict) -> Tuple[pandasDF, np_arr, np_arr]:
     '''
     Get the input numpy array for the dat
 
     Parameters
     ----------
-    tickers : list
-        A list of the tickers to use for testing
     config : dict
         Config params for the out of sample test.
     strat_config : dict
@@ -82,13 +79,12 @@ def get_testing_data(tickers: list,
         The testing dataframe, filtered to only the ticker/profit/label columns
     data : np_arr
         The data to feed into the NN
+    labels: np_arr
+        The true labels for the confusion matrix
     '''
     
     # Load in the dataframe with the tickers to test with
-    df = gen_input.get_nn_input(tickers,
-                                config,
-                                strat_config,
-                                )
+    df = pd.read_csv('nn/data/' + config['strat name'] + ' testing.csv')
     
     # Reset the index of the dataframe to remove the set with copy warning
     df = df.reset_index().drop(columns = ['index', 'ticker', 'Date'])
@@ -100,7 +96,7 @@ def get_testing_data(tickers: list,
                                  max(config['time lags']),
                                  )
     
-    return df[['Profit/Loss', 'labels']], data
+    return df[['Profit/Loss', 'labels']], data, df['labels'].values
 
 def get_stats(df: pandasDF,
               config: dict):
@@ -151,6 +147,7 @@ def print_stats(percs: np_arr):
         print('Number of trades: ', percs.shape[0])
         print('Win rate: ', percs[percs > 0].shape[0]/percs.shape[0])
         print('Mean profit: ', np.mean(percs))
+        print('Standard deviation: ', np.std(percs))
     else:
         print('No trades satisfied the class label/surety combination')
     

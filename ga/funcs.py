@@ -332,6 +332,8 @@ def get_random_strat(ga_config: dict) -> dict:
         return strat_lib.ma_crossover.get_random_strat(ga_config)
     elif ga_config['strat'] == 'simple bollinger band':
         return strat_lib.boll_band.get_random_strat(ga_config)
+    elif ga_config['strat'] == 'bollinger squeeze':
+        return strat_lib.boll_squeeze.get_random_strat(ga_config)
         
 def check_params(strat: dict,
                  ga_config: dict) -> dict:
@@ -342,6 +344,8 @@ def check_params(strat: dict,
         return strat_lib.ma_crossover.check_params(strat, ga_config)
     elif ga_config['strat'] == 'simple bollinger band':
         return strat_lib.boll_band.check_params(strat, ga_config)
+    elif ga_config['strat'] == 'bollinger squeeze':
+        return strat_lib.boll_squeeze.check_params(strat, ga_config)
     
 def perturb_strat(strat: dict,
                   ga_config: dict) -> dict:
@@ -352,6 +356,8 @@ def perturb_strat(strat: dict,
         strat = strat_lib.ma_crossover.perturb_strat(strat, ga_config)
     elif ga_config['strat'] == 'simple bollinger band':
         strat = strat_lib.boll_band.perturb_strat(strat, ga_config)
+    elif ga_config['strat'] == 'bollinger squeeze':
+        return strat_lib.boll_squeeze.perturb_strat(strat, ga_config)
         
     return check_params(strat, ga_config)
 

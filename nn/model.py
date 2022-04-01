@@ -2,20 +2,18 @@ import numpy as np
 import pandas as pd
 
 # Project imports
-from utils import io
+from nn import utils
 
 # Type-hinting imports
 from numpy import array as np_arr
 from pandas import DataFrame as pandasDF
 
 # NN imports
+from tensorflow.keras.regularizers import l2
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.utils import to_categorical
 from tensorflow.keras.layers import Dense, LSTM, Bidirectional, Dropout
-
-from matplotlib import pyplot as plt
-from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 
 def main(nn_config: dict):
     '''
@@ -32,7 +30,7 @@ def main(nn_config: dict):
     '''
     
     # Adjust the config file with the saved settings from the data generation
-    nn_config = add_gen_config(nn_config)
+    nn_config = utils.add_gen_config(nn_config)
     
     data = get_nn_data(nn_config)
     model = get_model(nn_config, data)
@@ -67,39 +65,12 @@ def main(nn_config: dict):
 
     # Plot the confusion matrix
     test_pred = np.argmax(model.predict(data['x test']), axis = 1)
-    cm = confusion_matrix(y_true = data['test'][:, -1].astype(int),
-                          y_pred = test_pred)
-    cm_scaled = cm/cm.astype(np.float).sum(axis = 0)
-    disp = ConfusionMatrixDisplay(confusion_matrix = cm_scaled)
-    disp.plot()
-    plt.savefig('nn/models/' + nn_config['model save name'] + '.png')
-    
-    return 
-
-def add_gen_config(nn_config: dict) -> dict:
-    '''
-    Add the params from the config settings used to generate the NN train data
-
-    Parameters
-    ----------
-    nn_config : dict
-        The config used to train the NN.
-
-    Returns
-    -------
-    nn_config : dict
-        The config with the generation settings
-    '''
-    
-    # Load the config used to generate the generate the NN data
-    gen_config = io.load_dict('nn/data/' + nn_config['strat name'])
-    
-    # Add the configs to the NN config
-    nn_config['include fundamentals'] = gen_config['include fundamentals']
-    nn_config['date filter'] = gen_config['date filter']
-    nn_config['time lags'] = gen_config['time lags']
-    
-    return nn_config
+    utils.get_confusion_matrix(data['test'][:, -1].astype(int),
+                               test_pred,
+                               nn_config,
+                               'In sample test',
+                               )
+    return
 
 def equalise_classes(df: pandasDF) -> pandasDF:
     '''
@@ -165,29 +136,29 @@ def get_nn_data(nn_config: dict) -> dict:
     nn_data = {}
     
     # Load in the data and drop columns not required for the nn
-    df = pd.read_csv('nn/data/' + nn_config['strat name'] + '.csv')
-    df = df.drop(columns = ['ticker', 'Date']).dropna()
-    df = df.drop_duplicates()
+    df = pd.read_csv('nn/data/' + nn_config['strat name'] + ' training.csv')
+    df = df.replace([np.inf, -np.inf], np.nan)
+    df = df.drop_duplicates().dropna()
+    
+    # Split the training and testing
+    train = df[df['Date'] <= nn_config['train date']].drop(columns = ['ticker', 'Date', 'Profit/Loss'])
+    test = df[df['Date'] > nn_config['train date']].drop(columns = ['ticker', 'Date', 'Profit/Loss']).values
     
     # Check if equal examples of each class is wanted
-    df = equalise_classes(df)
-
-    # Shuffle the data
-    data = df.values
-    np.random.shuffle(data)
+    train = equalise_classes(train).values
     
-    # Split training and test data
-    split = int(nn_config['train perc']*(data.shape[0]))
+    # Shuffle the training data before passing through
+    np.random.shuffle(train)
     
-    nn_data['train'] = data[0:split, :]
+    nn_data['train'] = train 
     nn_data['x train'] = nn_data['train'][:, 0:-1].astype(np.float32)
     nn_data['y train'] = to_categorical(nn_data['train'][:, -1].astype(int),
                                         nn_config['classes'])
     
-    nn_data['test'] = data[split:, :]
+    nn_data['test'] = test 
     nn_data['x test'] = nn_data['test'][:, 0:-1].astype(np.float32)
     nn_data['y test'] = to_categorical(nn_data['test'][:, -1].astype(int),
-                                       nn_config['classes'])
+                                        nn_config['classes'])
     
     # A 3D array is required for the lstm input, so we reshape to accomodate
     if nn_config['model type'] in ['lstm', 'bidirectional']:
@@ -264,12 +235,18 @@ def get_model(nn_config: dict,
         model = Sequential([
             Dense(nn_config['nodes'],
                   activation = 'relu',
-                  input_shape = (nn_data['x train'].shape[1],)),
-            Dense(nn_config['nodes']//2, activation = 'relu'),
+                  input_shape = (nn_data['x train'].shape[1],),
+                  kernel_regularizer = l2(nn_config['regularise']),
+                  bias_regularizer = l2(nn_config['regularise'])),
+            Dense(nn_config['nodes']//4,
+                  activation = 'relu',
+                  kernel_regularizer = l2(nn_config['regularise']),
+                  bias_regularizer = l2(nn_config['regularise'])),
             Dropout(nn_config['dropout perc']),
-            Dense(nn_config['nodes']//4, activation = 'relu'),
-            Dropout(nn_config['dropout perc']),
-            Dense(nn_config['nodes']//8, activation = 'relu'),
+            Dense(nn_config['nodes']//8,
+                  activation = 'relu',
+                  kernel_regularizer = l2(nn_config['regularise']),
+                  bias_regularizer = l2(nn_config['regularise'])),
             Dense(nn_config['classes'], activation = 'softmax')
             ])
         
@@ -280,7 +257,7 @@ def get_model(nn_config: dict,
                                 nn_data['x train'].shape[2]),
                  return_sequences = True),
             Dropout(nn_config['dropout perc']),
-            LSTM(nn_config['nodes']),
+            LSTM(nn_config['nodes']//2),
             Dropout(nn_config['dropout perc']),
             Dense(nn_config['classes'], activation = 'softmax'),
             ])

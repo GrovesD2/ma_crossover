@@ -1,6 +1,5 @@
 import time
 
-from utils import tickers
 from alpha_vantage.fundamentaldata import FundamentalData
 
 def fundamental_download_case(case: int,
@@ -108,7 +107,7 @@ def get_historical_fundamentals(ticker_list: list,
 
 api_key = 'MU3I3DR1WXM7WRV6'
 
-ticker_list = 'INCLUDE!'
+ticker_list = ['TROW', 'VIAC', 'ZION', 'INFO', 'TTWO', 'XLNX', 'ZTS', 'TMUS']
 
 incomplete_downloads = get_historical_fundamentals(ticker_list,
                                                    api_key)

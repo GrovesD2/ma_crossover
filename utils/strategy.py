@@ -36,9 +36,12 @@ def add_strat_cols(df: pandasDF,
         return strat_lib.ma_crossover.add_strat_cols(df, config)
     if strat == 'simple bollinger band':
         return strat_lib.boll_band.add_strat_cols(df, config)
+    if strat == 'bollinger squeeze':
+        return strat_lib.boll_squeeze.add_strat_cols(df, config)
     
 def get_buy_signals(df: pandasDF,
-                    strat: str) -> np_arr:
+                    strat: str,
+                    config: dict) -> np_arr:
     '''
     Return the indexes where a buy signal is found.
     '''
@@ -46,6 +49,8 @@ def get_buy_signals(df: pandasDF,
         return strat_lib.ma_crossover.get_signal_idx(df)
     if strat == 'simple bollinger band':
         return strat_lib.boll_band.get_signal_idx(df)
+    if strat == 'bollinger squeeze':
+        return strat_lib.boll_squeeze.get_signal_idx(df, config['thresh'])
     
 def run_strategy(df: pandasDF,
                  config: dict,
@@ -71,7 +76,7 @@ def run_strategy(df: pandasDF,
     '''
     
     # Get the indexes of the buy signals
-    signal_idx = get_buy_signals(df, strat_name)
+    signal_idx = get_buy_signals(df, strat_name, config)
 
     # Perform the buying and selling
     percs, bought, sold = make_trades(df['Open'].values.astype(np.float64),
@@ -138,9 +143,10 @@ def make_trades(Open: np_arr,
     
     for signal in signal_idx:
         
+        price = Open[signal + 1]
+        
         # Avoiding penny-stock behaviours
-        if Open[signal] > 1 and signal + max_hold + 1 < Open.shape[0]:
-            price = Open[signal + 1]
+        if price > 1 and signal + max_hold + 1 < Open.shape[0]:
             bought.append(signal + 1)
             
             for day in range(1, max_hold + 2):
@@ -218,6 +224,7 @@ def get_strat_stats(percs: np_arr,
     if percs.shape[0] > 0:
         return{'win rate': 100*percs[percs>0].shape[0]/percs.shape[0],
                'avg profit': np.mean(percs),
+               'std profit': np.std(percs),
                'median profit': np.median(percs),
                'mean hold': np.mean(hold),
                'median hold': np.median(hold),
@@ -228,6 +235,7 @@ def get_strat_stats(percs: np_arr,
     else:
         return{'win rate': 0,
                'avg profit': 0,
+               'std profit': 0,
                'median profit': 0,
                'mean hold': 0,
                'median hold': 0,

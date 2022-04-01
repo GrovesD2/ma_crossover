@@ -188,9 +188,9 @@ def get_all_metrics(ticker: str,
     
     # Join these dataframes into one fundamental dataset
     return metrics.merge(F_score,
-                         on = 'fiscalDateEnding',
-                         how = 'left',
-                         )
+                          on = 'fiscalDateEnding',
+                          how = 'left',
+                          )
 
 def get_all_fundamentals(ticker: str) -> pandasDF:
     '''

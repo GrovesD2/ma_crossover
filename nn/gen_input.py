@@ -3,6 +3,7 @@ Functions for the neural network
 '''
 
 import os
+import numpy as np
 import numba as nb
 import pandas as pd
 
@@ -32,28 +33,44 @@ def main(nn_config: dict,
     # Check if the data-folder has been made
     check_folder()
     
-    # Get a list of tickers, based on the available data
-    ticker_list = tickers.get_random_tickers(nn_config['tickers'])
-    
-    # Generate the nn input
-    df = get_nn_input(ticker_list,
-                      nn_config,
-                      strat_config,
-                      )
-    
-    # Drop the profit/loss column, this is required to make the gen_nn_input 
-    # function multi-purpose between training and testing
-    df = df.drop(columns = ['Profit/Loss'])
-
-    # Save the input data into the data-folder
-    df.to_csv('nn/data/' + nn_config['strat name'] + '.csv',
-              index = False,
-              )
-    
-    # Save the configuration settings as a json file
-    io.save_dict(nn_config,
-                 'nn/data/' + nn_config['strat name'],
-                 )
+    for case in ['training', 'testing']:
+        
+        print('Obtaining the ' + case + ' data')
+        
+        # Get a list of tickers, based on the available data
+        if case == 'training':
+            ticker_list = tickers.get_random_tickers(nn_config['tickers'])
+        else:
+            ticker_list = tickers.get_tickers_exc_sample(nn_config['testing tickers'],
+                                                         ticker_list)
+        
+        # Generate the nn input
+        df = get_nn_input(ticker_list,
+                          nn_config,
+                          strat_config,
+                          )
+        
+        # Calculate the P/L mean value so that it is saved for future use in
+        # testing and training the NN
+        if case == 'training':
+            nn_config['mean trade'] = df['Profit/Loss'].mean()
+        
+            # Save the configuration settings as a json file
+            io.save_dict(nn_config,
+                         'nn/data/' + nn_config['strat name'],
+                         )
+            
+        # Produce the labels for each trade
+        df['labels'] = np.where(
+            df['Profit/Loss'].values < nn_config['mean trade'],
+            0,
+            1,
+            )
+                
+        # Save the input data into the data-folder
+        df.to_csv('nn/data/' + nn_config['strat name'] + ' ' + case + '.csv',
+                  index = False,
+                  )
     return     
 
 def get_nn_input(tickers: list,
@@ -81,26 +98,15 @@ def get_nn_input(tickers: list,
     df = get_time_series_data(nn_config,
                               strat_config,
                               tickers,
-                              nn_config['date filter'],
                               )
-
+    
     # Drop the columns we no longer want for the nn
-    df = df.drop(columns = (strat_config['price feats']
-                            + strat_config['other feats']
+    df = df.drop(columns = (strat_config['return feats']
+                            + strat_config['time series feats']
                             + strat_config['drop cols']
                             ),
                  )
-    
-    # Normalise the time-series for price related cols, and other features
-    df = normalise_prices(df, strat_config['price feats'])
-    df = normalise_non_price(df, strat_config['other feats'])
-    
-    # Get the spy index as a feature
-    df = single_stock_data('SPY', nn_config).merge(df,
-                                                   on = 'Date',
-                                                   how = 'inner',
-                                                   )
-    
+
     if nn_config['include fundamentals']:
         df = include_fundamentals(df)
         
@@ -110,8 +116,8 @@ def get_nn_input(tickers: list,
         # Rearrange the columns such that ticker, Profit/Loss and labels appear
         # at the end, this is helpful for sorting the data in the nn code
         cols = [col for col in df.columns.tolist() 
-                if col not in ['Profit/Loss', 'labels', 'ticker']]
-        df = df[cols + ['Profit/Loss', 'labels', 'ticker']]
+                if col not in ['Profit/Loss', 'ticker']]
+        df = df[cols + ['Profit/Loss', 'ticker']]
     
     # Drop any null entries, to stop any bad-data getting into the nn
     return df.dropna()
@@ -162,9 +168,6 @@ def single_stock_data(ticker: str,
     for col in ['Open', 'Low', 'High', 'Close', 'Volume']:
         df = time_series_cols(df, col, nn_config['time lags'])
     
-    df = normalise_prices(df, ['Open', 'Low', 'High', 'Close'])
-    df = normalise_non_price(df, ['Volume'])
-    
     # Drop the unncessary columns when returning    
     return df.drop(columns = ['Open', 'Low', 'High', 'Close', 'Volume',
                               'Adj Close']
@@ -213,8 +216,7 @@ def normalise_time_series(df: pandasDF,
 
 def get_time_series_data(nn_config: dict,
                          strat_config: dict,
-                         ticker_list: list,
-                         date_filter: str) -> pandasDF:
+                         ticker_list: list) -> pandasDF:
     '''
     Produce a dataframe containing the time-series data for a random selection
     of tickers. The output df contains the backseries of data for each trade
@@ -255,7 +257,7 @@ def get_time_series_data(nn_config: dict,
         if nn_config['include fundamentals']:
             df = df[df['Date'] >= '2017-01-01']
         else:
-            df = df[df['Date'] >= date_filter]
+            df = df[df['Date'] >= nn_config['lower date filter']]
         
         if len(df) > 0:
             df_strat, _ = strategy.run_strategy(df,
@@ -266,17 +268,25 @@ def get_time_series_data(nn_config: dict,
             # If at least one trade has been made, create the nn features
             if len(df_strat) > 0:
                 
-                # Obtain the time-series of data for each of the features
-                for col in strat_config['price feats'] + strat_config['other feats']:
-                    df = time_series_cols(df, col, nn_config['time lags'])
+                # If the bollinger squeeze is wanted, then normalise the
+                # difference between the bands by dividing by 100
+                if nn_config['strat name'] == 'bollinger squeeze':
+                    df['boll_diff'] = df['boll_diff']/100
+                
+                # Obtain time series of returns (i.e. percentage changes)
+                for col in strat_config['return feats']:
+                    df = time_series_returns(df, col, nn_config['time lags'])
+                    
+                # Other time series features
+                for col in strat_config['time series feats']:
+                    df = time_series_feats(df, col, nn_config['time lags'])
+                
+                # Include the candle sizes as features
+                df = perc_diff_time_series(df, 'Close', 'Open', nn_config['time lags'])
+                df = perc_diff_time_series(df, 'Low', 'High', nn_config['time lags'])
                     
                 # Filter the dataframe to consider the times a trade was made
                 df = get_trades(df, df_strat)
-                
-                # Produce the tags
-                df['labels'] = labeller(df['Profit/Loss'].values,
-                                        strat_config['profit'],
-                                        strat_config['stop'])
                 
                 # Add the identifier for this data, and include it on the list
                 df['ticker'] = ticker
@@ -308,9 +318,34 @@ def get_trades(df: pandasDF,
     # Drop the unecessary columns for the nn
     return df.drop(columns = ['Sold' , 'Days held'])
         
-def time_series_cols(df: pandasDF,
-                     col: str,
-                     lags: list) -> pandasDF:
+def time_series_returns(df: pandasDF,
+                        col: str,
+                        lags: list) -> pandasDF:
+    '''
+    Create a time series of percentage changes
+
+    Parameters
+    ----------
+    df : pandasDF
+        The dataframe of price data.
+    col : str
+        The column we wish to create the time series of.
+    lags : list
+        A list of integers to denote the time series points.
+
+    Returns
+    -------
+    pandasDF
+        A dataframe with the time series cols.
+    '''
+    return df.assign(**{
+        f'{col}_t-{lag}': np.log(df[col].shift(lag-1)/df[col].shift(lag))
+        for lag in lags
+        })
+
+def time_series_feats(df: pandasDF,
+                      col: str,
+                      lags: list) -> pandasDF:
     '''
     Create columns for the time series of "cols", where the lags are specified
     in the "lags" list.
@@ -334,14 +369,43 @@ def time_series_cols(df: pandasDF,
         for lag in lags
         })
 
+def perc_diff_time_series(df: pandasDF,
+                          low: str,
+                          high: str,
+                          lags: list) -> pandasDF:
+    '''
+    Create percentage differences between two cols, and lag the time series
+
+    Parameters
+    ----------
+    df : pandasDF
+        The dataframe of price data.
+    low : str
+        The column we wish to find the percentage change from
+    high : str
+        The column we wish to find the percentage change to
+    lags : list
+        A list of integers to denote the time series points.
+
+    Returns
+    -------
+    pandasDF
+        A dataframe with the time series cols.
+    '''
+    col = df[high]/df[low] - 1
+    return df.assign(**{
+        f'{high}_{low}_t-{lag}': col.shift(lag)
+        for lag in lags
+        })
+
 @nb.jit(nopython=True) 
 def labeller(percs, profit, stop):
     
     out = []
     for perc in percs:
-        if int(perc) == profit:
+        if perc >= profit:
             out.append(3)
-        elif int(perc) == stop:
+        elif perc <= stop:
             out.append(0)
         elif perc > 0:
             out.append(2)
