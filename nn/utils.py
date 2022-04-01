@@ -61,8 +61,7 @@ def get_confusion_matrix(true_labels: np_arr,
     '''    
     cm = confusion_matrix(y_true = true_labels,
                           y_pred = pred_labels)
-    #cm_scaled = cm/cm.astype(np.float).sum(axis = 0)
-    cm_scaled = cm
+    cm_scaled = cm/cm.astype(np.float).sum(axis = 0)
     
     disp = ConfusionMatrixDisplay(confusion_matrix = cm_scaled)
     disp.plot()

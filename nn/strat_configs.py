@@ -33,15 +33,15 @@ def get_config(strat: str) -> dict:
     
     elif strat == 'simple bollinger band':
         return {'mean type': 'exp',
-                'std type': 'exp',
-                'mean price': 'Open',
-                'std price': 'Open',
-                'mean days': 266,
-                'std days': 246,
-                'factor': -1.09,
+                'std type': 'rolling',
+                'mean price': 'Close',
+                'std price': 'Low',
+                'mean days': 15,
+                'std days': 14,
+                'factor': -1.94,
                 'profit': 100,
                 'stop': -7,
-                'max hold': 10,
+                'max hold': 5,
                 
                 'return feats': ['Open', 'Low', 'High', 'Close', 'boll_lower',
                                  'Volume'],
@@ -105,6 +105,19 @@ def get_config(strat: str) -> dict:
     Maximum hold time:  5
     Mean hold time:  4.22526880817111
     Mean number of trades:  263.775
+    
+    10 day strat
+    
+    'mean type': 'exp',
+            'std type': 'exp',
+            'mean price': 'Open',
+            'std price': 'Open',
+            'mean days': 266,
+            'std days': 246,
+            'factor': -1.09,
+            'profit': 100,
+            'stop': -7,
+            'max hold': 10,
     
     -------------------
     

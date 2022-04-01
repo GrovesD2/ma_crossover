@@ -105,7 +105,7 @@ def get_historical_fundamentals(ticker_list: list,
 
     return incomplete_downloads
 
-api_key = 'MU3I3DR1WXM7WRV6'
+api_key = 'INSERT'
 
 ticker_list = ['TROW', 'VIAC', 'ZION', 'INFO', 'TTWO', 'XLNX', 'ZTS', 'TMUS']
 

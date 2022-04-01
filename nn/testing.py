@@ -147,7 +147,7 @@ def print_stats(percs: np_arr):
         print('Number of trades: ', percs.shape[0])
         print('Win rate: ', percs[percs > 0].shape[0]/percs.shape[0])
         print('Mean profit: ', np.mean(percs))
-        print('Standard deviation: ', np.std(percs))
+        print('Median profit: ', np.median(percs))
     else:
         print('No trades satisfied the class label/surety combination')
     
